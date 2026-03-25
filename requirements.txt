@@ -1,0 +1,15 @@
+# Web framework
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+
+# Templating
+jinja2>=3.1.4
+
+# Database / ORM
+sqlalchemy>=2.0.29
+
+# Settings management
+pydantic-settings>=2.2.1
+
+# Form & file upload support
+python-multipart>=0.0.9
