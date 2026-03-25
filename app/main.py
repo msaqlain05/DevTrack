@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.db.init_db import init_db
 from app.routes import home
+from app.routes import auth
 
 
 @asynccontextmanager
@@ -31,3 +32,4 @@ templates = Jinja2Templates(directory="app/templates")
 
 # ── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(home.router)
+app.include_router(auth.router)

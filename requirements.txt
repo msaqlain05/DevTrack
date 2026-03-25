@@ -13,3 +13,8 @@ pydantic-settings>=2.2.1
 
 # Form & file upload support
 python-multipart>=0.0.9
+
+# Authentication
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+
