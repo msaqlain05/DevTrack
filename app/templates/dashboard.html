@@ -1,153 +1,188 @@
 {% extends "base.html" %}
-
-{% block title %}DevTrack - Dashboard{% endblock %}
+{% block title %}DevTrack – Dashboard{% endblock %}
 
 {% block content %}
-<div class="flex-between mb-4">
+<div class="page-header flex-between">
+  <div>
     <h1>Dashboard</h1>
+    <p class="text-muted text-sm mt-1" id="welcomeLine">Loading…</p>
+  </div>
 </div>
 
-<div class="grid">
-    <!-- Left Column: Projects -->
-    <div>
-        <div class="flex-between mb-4">
-            <h2>Your Projects</h2>
-            <button class="btn" onclick="toggleProjectForm()">+ New</button>
-        </div>
-        
-        <div class="card" id="projectFormCard" style="display: none; border-color: var(--accent-color);">
-            <form onsubmit="handleCreateProject(event)">
-                <div class="form-group">
-                    <input type="text" id="projName" class="form-control" placeholder="Project Name" required>
-                </div>
-                <div class="form-group">
-                    <input type="text" id="projDesc" class="form-control" placeholder="Description (optional)">
-                </div>
-                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                    <button type="button" class="btn" onclick="toggleProjectForm()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create</button>
-                </div>
-            </form>
-        </div>
-
-        <div id="projectsList">
-            <div class="loading-text">Fetching projects...</div>
-        </div>
+<div class="grid-2">
+  <!-- ── Projects ────────────────────────────── -->
+  <section>
+    <div class="section-header">
+      <h2>Projects</h2>
+      <button class="btn btn-sm" id="newProjBtn" onclick="toggleProjectForm()">＋ New project</button>
     </div>
 
-    <!-- Right Column: All Tasks -->
-    <div>
-        <h2 class="mb-4">Your Tasks</h2>
-        <div id="todayTasksList">
-            <div class="loading-text">Fetching tasks...</div>
-        </div>
+    <!-- Inline create form with CSS animation -->
+    <div class="inline-form" id="projectForm">
+      <div class="inline-form-inner">
+        <form onsubmit="handleCreateProject(event)">
+          <div class="form-group">
+            <label class="form-label">Project name*</label>
+            <input class="form-control" id="projName" placeholder="e.g. My API" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <input class="form-control" id="projDesc" placeholder="Optional">
+          </div>
+          <div class="flex gap-2" style="justify-content:flex-end">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="toggleProjectForm()">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-sm" id="projSubmitBtn">Create</button>
+          </div>
+        </form>
+      </div>
     </div>
+
+    <div id="projectsList">
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+    </div>
+  </section>
+
+  <!-- ── Tasks ──────────────────────────────── -->
+  <section>
+    <div class="section-header">
+      <h2>Your Tasks</h2>
+      <span class="badge badge-pending" id="taskCount" style="display:none"></span>
+    </div>
+    <div id="tasksList">
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+    </div>
+  </section>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    if (!localStorage.getItem('token')) {
-        window.location.href = '/login';
+  if (!localStorage.getItem('token')) window.location.href = '/login';
+
+  let projectsCache = {};
+
+  function toggleProjectForm() {
+    const form = document.getElementById('projectForm');
+    const btn  = document.getElementById('newProjBtn');
+    const open = form.classList.toggle('open');
+    btn.textContent = open ? '✕ Cancel' : '＋ New project';
+    if (open) setTimeout(() => document.getElementById('projName').focus(), 50);
+  }
+
+  async function loadDashboard() {
+    try {
+      const [projects, tasks] = await Promise.all([
+        apiFetch('/projects/'),
+        apiFetch('/tasks/')
+      ]);
+
+      // Welcome line
+      document.getElementById('welcomeLine').textContent =
+        `${projects.length} project${projects.length !== 1 ? 's' : ''} · ${tasks.length} task${tasks.length !== 1 ? 's' : ''}`;
+
+      // Render Projects
+      const pList = document.getElementById('projectsList');
+      pList.innerHTML = '';
+      if (!projects.length) {
+        pList.innerHTML = `<div class="empty-state">
+          <span class="empty-icon">🗂</span>
+          <p>No projects yet.<br>Create one to get started.</p></div>`;
+      } else {
+        projects.forEach((p, i) => {
+          projectsCache[p.id] = p;
+          const card = document.createElement('a');
+          card.className = 'project-card';
+          card.href = `/project/${p.id}`;
+          card.style.animationDelay = `${i * 0.05}s`;
+          card.innerHTML = `
+            <div class="card-title">${escHtml(p.name)}</div>
+            <div class="card-meta">${p.description ? escHtml(p.description) : 'No description'}</div>`;
+          pList.appendChild(card);
+        });
+      }
+
+      // Render Tasks
+      const tList = document.getElementById('tasksList');
+      tList.innerHTML = '';
+
+      // Task count badge
+      const countBadge = document.getElementById('taskCount');
+      if (tasks.length) {
+        countBadge.textContent = `${tasks.length} total`;
+        countBadge.style.display = '';
+      }
+
+      if (!tasks.length) {
+        tList.innerHTML = `<div class="empty-state">
+          <span class="empty-icon">✅</span>
+          <p>No tasks yet.<br>Open a project and add some!</p></div>`;
+      } else {
+        tasks.forEach((t, i) => {
+          const proj    = projectsCache[t.project_id];
+          const isDone  = t.status === 'completed';
+          const item    = document.createElement('div');
+          item.className = `task-item${isDone ? ' done' : ''}`;
+          item.style.animationDelay = `${i * 0.04}s`;
+          item.innerHTML = `
+            <div>
+              <div class="task-title">${escHtml(t.title)}</div>
+              <div class="task-meta">
+                <span class="badge badge-${t.status}">${t.status.replace('-',' ')}</span>
+                ${proj ? `<span>· in <strong>${escHtml(proj.name)}</strong></span>` : ''}
+                ${t.date ? `<span>· 🗓 ${t.date}</span>` : ''}
+              </div>
+            </div>
+            <div class="task-actions">
+              ${!isDone ? `<button class="btn btn-sm btn-primary" onclick="markDone(${t.id})">✔ Done</button>` : ''}
+            </div>`;
+          tList.appendChild(item);
+        });
+      }
+    } catch (err) {
+      console.error('Dashboard error:', err);
     }
+  }
 
-    let projectsCache = {};
+  async function handleCreateProject(e) {
+    e.preventDefault();
+    const name = document.getElementById('projName').value.trim();
+    const desc = document.getElementById('projDesc').value.trim();
+    const btn  = document.getElementById('projSubmitBtn');
 
-    function toggleProjectForm() {
-        const pForm = document.getElementById('projectFormCard');
-        pForm.style.display = pForm.style.display === 'none' ? 'block' : 'none';
+    btn.disabled = true; btn.textContent = 'Creating…';
+    try {
+      await apiFetch('/projects/', {
+        method: 'POST',
+        body: JSON.stringify({ name, description: desc || null })
+      });
+      toggleProjectForm();
+      document.getElementById('projName').value = '';
+      document.getElementById('projDesc').value = '';
+      showToast('Project created!', 'success');
+      loadDashboard();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Create';
     }
+  }
 
-    async function loadDashboard() {
-        try {
-            // 1. Load Projects
-            const projects = await apiFetch('/projects/');
-            const pList = document.getElementById('projectsList');
-            
-            pList.innerHTML = '';
-            if (projects.length === 0) {
-                pList.innerHTML = `<div class="card"><div class="card-text text-center">No projects yet. Create one to get started!</div></div>`;
-            } else {
-                projects.forEach(p => {
-                    projectsCache[p.id] = p; // Store for task rendering
-                    pList.innerHTML += `
-                        <a href="/project/${p.id}" style="display:block; text-decoration:none;">
-                            <div class="card" style="transition: border-color 0.2s; cursor: pointer;" onmouseover="this.style.borderColor='var(--accent-color)'" onmouseout="this.style.borderColor='var(--border-color)'">
-                                <div class="card-title">${p.name}</div>
-                                ${p.description ? `<div class="card-text">${p.description}</div>` : ''}
-                            </div>
-                        </a>
-                    `;
-                });
-            }
+  async function markDone(taskId) {
+    try {
+      await apiFetch(`/tasks/${taskId}`, { method: 'PUT', body: JSON.stringify({ status: 'completed' }) });
+      showToast('Task completed! 🎉', 'success');
+      loadDashboard();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
 
-            // 2. Load All Tasks
-            const tasks = await apiFetch(`/tasks/`);
-            const tList = document.getElementById('todayTasksList');
-            
-            tList.innerHTML = '';
-            if (tasks.length === 0) {
-                tList.innerHTML = `<div class="card"><div class="card-text text-center">No tasks assigned yet. Kick back and relax! ☕</div></div>`;
-            } else {
-                tasks.forEach(t => {
-                    const projInfo = projectsCache[t.project_id] ? `in <strong>${projectsCache[t.project_id].name}</strong>` : '';
-                    const isDone = t.status === 'completed';
-                    tList.innerHTML += `
-                        <div class="card" style="display: flex; justify-content: space-between; align-items: flex-start; opacity: ${isDone ? '0.6' : '1'}">
-                            <div>
-                                <div style="font-weight: 500; font-size: 1rem; margin-bottom: 0.2rem; text-decoration: ${isDone ? 'line-through' : 'none'}">${t.title}</div>
-                                <div class="card-text" style="margin-bottom: 0.5rem">${projInfo}</div>
-                                <span class="status-badge status-${t.status}">${t.status.replace('-', ' ')}</span>
-                            </div>
-                            <!-- Clicking updates status dynamically without reload -->
-                            ${!isDone ? `<button class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="markDone(${t.id})">✔ Done</button>` : ''}
-                        </div>
-                    `;
-                });
-            }
-        } catch (err) {
-            console.error("Dashboard Load Error:", err);
-            // It might fail if token is invalid, handled by apiFetch automatically
-        }
-    }
+  // XSS protection
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
-    async function handleCreateProject(e) {
-        e.preventDefault();
-        const name = document.getElementById('projName').value;
-        const desc = document.getElementById('projDesc').value;
-        const btn = e.target.querySelector('button[type="submit"]');
-
-        try {
-            btn.disabled = true;
-            await apiFetch('/projects/', {
-                method: 'POST',
-                body: JSON.stringify({ name, description: desc || null })
-            });
-            toggleProjectForm();
-            document.getElementById('projName').value = '';
-            document.getElementById('projDesc').value = '';
-            showToast('Project created successfully!', 'success');
-            loadDashboard(); // Reload data silently
-        } catch (err) {
-            showToast("Error creating project: " + err.message, 'error');
-        } finally {
-            btn.disabled = false;
-        }
-    }
-
-    async function markDone(taskId) {
-        try {
-            await apiFetch(`/tasks/${taskId}`, {
-                method: 'PUT',
-                body: JSON.stringify({ status: 'completed' })
-            });
-            showToast('Task marked as completed', 'success');
-            loadDashboard(); // Refresh
-        } catch (err) {
-            showToast("Error updating task: " + err.message, 'error');
-        }
-    }
-
-    document.addEventListener("DOMContentLoaded", loadDashboard);
+  document.addEventListener('DOMContentLoaded', loadDashboard);
 </script>
 {% endblock %}

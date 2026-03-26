@@ -1,126 +1,110 @@
 {% extends "base.html" %}
-
-{% block title %}DevTrack - Authentication{% endblock %}
+{% block title %}DevTrack – Sign In{% endblock %}
 
 {% block content %}
-<div style="max-width: 400px; margin: 4rem auto;">
-    <div class="card" id="authCard">
-        <!-- JS toggles between Login and Signup modes -->
-        <h2 id="authTitle">Sign In</h2>
-        <div id="authAlert" class="alert alert-error"></div>
-        
-        <form id="authForm" onsubmit="handleAuth(event)">
-            <div class="form-group">
-                <label class="form-label" for="email">Email</label>
-                <input type="email" id="email" class="form-control" placeholder="developer@example.com" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="password">Password</label>
-                <input type="password" id="password" class="form-control" placeholder="••••••••" required minlength="8">
-            </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%" id="authBtn">Sign In</button>
-        </form>
-        
-        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.875rem;">
-            <a href="#" id="authToggle" onclick="toggleMode(event)">Need an account? Sign up</a>
-        </div>
+<div class="auth-wrap">
+  <div class="auth-card">
+
+    <div class="auth-logo">
+      <div class="brand">
+        <span class="brand-dot"></span>DevTrack
+      </div>
+      <p class="text-muted text-sm" style="margin-top:.5rem;">Developer-focused project tracker</p>
     </div>
+
+    <div id="authAlert" class="alert alert-error"></div>
+
+    <h2 id="authTitle" style="margin-bottom:1.5rem;font-size:1.15rem;">Welcome back</h2>
+
+    <form id="authForm" onsubmit="handleAuth(event)">
+      <div class="form-group">
+        <label class="form-label" for="email">Email address</label>
+        <input class="form-control" type="email" id="email"
+               placeholder="you@example.com" autocomplete="email" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input class="form-control" type="password" id="password"
+               placeholder="••••••••" autocomplete="current-password" required minlength="8">
+      </div>
+      <button type="submit" class="btn btn-primary w-full" id="authBtn"
+              style="margin-top:.25rem; padding:.65rem;">
+        Sign In
+      </button>
+    </form>
+
+    <div class="auth-divider">or</div>
+
+    <p class="text-center text-sm text-muted">
+      <span id="authToggleText">Don't have an account?</span>
+      <a href="#" id="authToggle" onclick="toggleMode(event)" style="margin-left:.25rem;">Sign up</a>
+    </p>
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    let isLogin = window.location.pathname.includes('login');
+  let isLogin = !window.location.pathname.includes('signup');
 
-    // Make sure we redirect away if already logged in!
-    if (localStorage.getItem('token')) {
-        window.location.href = '/dashboard';
+  if (localStorage.getItem('token')) window.location.href = '/dashboard';
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('expired')) showError('authAlert', 'Session expired — please log in again.');
+
+  function setMode(login) {
+    isLogin = login;
+    document.getElementById('authTitle').textContent   = login ? 'Welcome back' : 'Create account';
+    document.getElementById('authBtn').textContent     = login ? 'Sign In' : 'Sign Up';
+    document.getElementById('authToggleText').textContent = login ? "Don't have an account?" : 'Already have an account?';
+    document.getElementById('authToggle').textContent  = login ? 'Sign up' : 'Sign in';
+    document.getElementById('authAlert').style.display = 'none';
+    window.history.replaceState(null, '', login ? '/login' : '/signup');
+  }
+
+  function toggleMode(e) { e.preventDefault(); setMode(!isLogin); }
+
+  setMode(isLogin); // Apply initial state
+
+  async function handleAuth(e) {
+    e.preventDefault();
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn      = document.getElementById('authBtn');
+
+    document.getElementById('authAlert').style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = isLogin ? 'Signing in…' : 'Creating account…';
+
+    try {
+      if (!isLogin) {
+        await apiFetch('/auth/signup', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+      }
+
+      // Always login via form-urlencoded (OAuth2 spec)
+      const form = new URLSearchParams({ username: email, password });
+      const res  = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: form
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.detail || 'Invalid credentials');
+      }
+      const { access_token } = await res.json();
+      localStorage.setItem('token', access_token);
+      window.location.href = '/dashboard';
+
+    } catch (err) {
+      showError('authAlert', err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = isLogin ? 'Sign In' : 'Sign Up';
     }
-
-    // Checking for expiration redirect
-    const urlParams = new URLSearchParams(window.location.search);
-    if(urlParams.get('expired')) {
-        showError('authAlert', 'Session expired. Please log in again.');
-    }
-
-    function toggleMode(e) {
-        if(e) e.preventDefault();
-        isLogin = !isLogin;
-        
-        document.getElementById('authTitle').innerText = isLogin ? 'Sign In' : 'Create Account';
-        document.getElementById('authBtn').innerText = isLogin ? 'Sign In' : 'Sign Up';
-        document.getElementById('authToggle').innerText = isLogin ? 'Need an account? Sign up' : 'Already have an account? Sign in';
-        document.getElementById('authAlert').style.display = 'none';
-        
-        // Update URL cleanly
-        window.history.replaceState(null, '', isLogin ? '/login' : '/signup');
-    }
-    
-    // Set initial state correctly if accessing /signup directly
-    if (!isLogin) {
-        isLogin = true; // Flips it back when calling toggleMode
-        toggleMode();
-    }
-
-    async function handleAuth(e) {
-        e.preventDefault();
-        
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const alertBox = document.getElementById('authAlert');
-        
-        alertBox.style.display = 'none';
-
-        try {
-            document.getElementById('authBtn').disabled = true;
-
-            if (isLogin) {
-                // Login expects FormData (OAuth2 compat)
-                const formData = new URLSearchParams();
-                formData.append('username', email); // OAuth2 expects 'username' not 'email'
-                formData.append('password', password);
-                
-                const response = await fetch('/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: formData
-                });
-                
-                if (!response.ok) {
-                    const data = await response.json().catch(()=>({}));
-                    throw new Error(data.detail || 'Invalid credentials');
-                }
-                
-                const data = await response.json();
-                localStorage.setItem('token', data.access_token);
-                window.location.href = '/dashboard';
-
-            } else {
-                // Signup expects JSON logic as we built it
-                await apiFetch('/auth/signup', {
-                    method: 'POST',
-                    body: JSON.stringify({ email, password })
-                });
-                
-                // Immediately auto-login
-                const formData = new URLSearchParams();
-                formData.append('username', email);
-                formData.append('password', password);
-                
-                const response = await fetch('/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: formData
-                });
-                const data = await response.json();
-                localStorage.setItem('token', data.access_token);
-                window.location.href = '/dashboard';
-            }
-        } catch (err) {
-            showError('authAlert', err.message);
-        } finally {
-            document.getElementById('authBtn').disabled = false;
-        }
-    }
+  }
 </script>
 {% endblock %}

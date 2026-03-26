@@ -1,33 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}DevTrack{% endblock %}</title>
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
-    {% block extra_head %}{% endblock %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}DevTrack{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="/dashboard" class="brand">🚀 DevTrack</a>
-            <div class="nav-links" id="authNav">
-                <!-- Dynamically populated by JS based on Auth state -->
-            </div>
-        </div>
-    </nav>
-    <main class="container">
-        {% block content %}{% endblock %}
-    </main>
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="/dashboard" class="brand">
+        <span class="brand-dot"></span>
+        DevTrack
+      </a>
+      <div class="nav-links" id="authNav">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </nav>
 
-    <!-- Global Toast Container -->
-    <div id="toastContainer" class="toast-container"></div>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
 
-    <script src="/static/js/app.js"></script>
-    {% block scripts %}{% endblock %}
+  <!-- Toast container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="/static/js/app.js"></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>
