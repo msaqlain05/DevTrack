@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
+from pathlib import Path
 
 router = APIRouter(tags=["Frontend Views"])
-templates = Jinja2Templates(directory="app/templates")
+APP_DIR = Path(__file__).resolve().parents[1]
+templates = Jinja2Templates(directory=str(APP_DIR / "templates"))
 
 
 @router.get("/", response_class=HTMLResponse)

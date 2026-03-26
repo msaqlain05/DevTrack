@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from app.core.config import settings
 from app.db.init_db import init_db
@@ -9,6 +10,10 @@ from app.routes import auth
 from app.routes import home
 from app.routes import project
 from app.routes import task
+
+APP_DIR = Path(__file__).resolve().parent
+STATIC_DIR = APP_DIR / "static"
+TEMPLATES_DIR = APP_DIR / "templates"
 
 
 @asynccontextmanager
@@ -27,10 +32,10 @@ app = FastAPI(
 )
 
 # ── Static files ────────────────────────────────────────────────────────────
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # ── Jinja2 templates ─────────────────────────────────────────────────────────
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # ── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(home.router)

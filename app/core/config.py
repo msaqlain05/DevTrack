@@ -1,3 +1,5 @@
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,3 +28,7 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Vercel serverless functions have a read-only filesystem except /tmp.
+if os.getenv("VERCEL") and settings.DATABASE_URL == "sqlite:///./app/db/devtrack.db":
+    settings.DATABASE_URL = "sqlite:////tmp/devtrack.db"
