@@ -8,7 +8,7 @@ from app.db.init_db import init_db
 from app.routes import auth
 from app.routes import home
 from app.routes import project
-from app.routes import tasks
+from app.routes import task
 
 
 @asynccontextmanager
@@ -36,4 +36,4 @@ templates = Jinja2Templates(directory="app/templates")
 app.include_router(home.router)
 app.include_router(auth.router)
 app.include_router(project.router)
-app.include_router(tasks.router)
+app.include_router(task.router)
