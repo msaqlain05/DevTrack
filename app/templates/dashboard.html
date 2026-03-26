@@ -35,9 +35,9 @@
         </div>
     </div>
 
-    <!-- Right Column: Today's Tasks -->
+    <!-- Right Column: All Tasks -->
     <div>
-        <h2 class="mb-4">Today's Tasks</h2>
+        <h2 class="mb-4">Your Tasks</h2>
         <div id="todayTasksList">
             <div class="loading-text">Fetching tasks...</div>
         </div>
@@ -81,14 +81,13 @@
                 });
             }
 
-            // 2. Load Today's Tasks
-            const today = new Date().toISOString().split('T')[0];
-            const tasks = await apiFetch(`/tasks/?date=${today}`);
+            // 2. Load All Tasks
+            const tasks = await apiFetch(`/tasks/`);
             const tList = document.getElementById('todayTasksList');
             
             tList.innerHTML = '';
             if (tasks.length === 0) {
-                tList.innerHTML = `<div class="card"><div class="card-text text-center">No tasks scheduled for today. Kick back and relax! ☕</div></div>`;
+                tList.innerHTML = `<div class="card"><div class="card-text text-center">No tasks assigned yet. Kick back and relax! ☕</div></div>`;
             } else {
                 tasks.forEach(t => {
                     const projInfo = projectsCache[t.project_id] ? `in <strong>${projectsCache[t.project_id].name}</strong>` : '';

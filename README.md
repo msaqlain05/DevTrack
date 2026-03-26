@@ -1,97 +1,99 @@
-# DevTrack — FastAPI Starter
+# 🚀 DevTrack
 
-A production-ready, modular FastAPI project with Jinja2 templates, SQLite, and SQLAlchemy.
-
----
-
-## Project Structure
-
-```
-DevTrack/
-├── app/
-│   ├── main.py            # FastAPI entry point
-│   ├── core/
-│   │   └── config.py      # Pydantic settings (reads .env)
-│   ├── db/
-│   │   ├── base.py        # SQLAlchemy declarative base
-│   │   ├── session.py     # Engine, SessionLocal, get_db()
-│   │   └── init_db.py     # Table creation helper
-│   ├── models/            # ORM models (add your models here)
-│   ├── schemas/           # Pydantic schemas (request/response)
-│   ├── routes/
-│   │   └── home.py        # Home page route
-│   ├── services/          # Business logic layer
-│   ├── templates/
-│   │   ├── base.html      # Base Jinja2 template
-│   │   └── index.html     # Home page
-│   └── static/
-│       └── css/main.css   # Styles
-├── .env                   # Environment variables (never commit!)
-├── requirements.txt
-└── README.md
-```
+**DevTrack** is a clean, minimal, and highly scalable Project & Task Management system designed for developers. It combines a robust Python backend built on **FastAPI** with a lightning-fast frontend rendered via **Jinja2**, Vanilla JavaScript, and native CSS Custom Properties.
 
 ---
 
-## Quick Start
+## ✨ Features
 
-### 1. Clone / enter the project
+- **Robust Authentication**: Fully integrated OAuth2-compatible JWT (JSON Web Token) authentication flow, heavily secured using `bcrypt` password hashing.
+- **Strict Data Isolation**: Every resource (Projects, Tasks) is strictly cryptographically bounded to the `owner_id`. A user can *only* interact with their own generated data.
+- **Relational Integrity**: Deletion of a Project utilizes SQLite `PRAGMA foreign_keys=ON` event listeners to cleanly cascade and delete all associated child Tasks automatically.
+- **Dashboard Aggregation**: A top-level dashboard that dynamically fetches all active projects and aggregates "Today's Tasks" globally utilizing a fast `?date=` query parameter.
+- **Premium UI/UX**: Dark-mode natively built with pure CSS. No bulky UI frameworks—just sleek layout engines, Google `Inter` font, Animated Toast notifications, and graceful Loading states.
 
-```bash
-cd DevTrack
+---
+
+## 🏗️ Technical Stack
+
+### Backend
+- **Framework**: [FastAPI](https://fastapi.tiangolo.com/) (High-performance Async API)
+- **Database**: SQLite (Perfect for portability, easily upgradeable to PostgreSQL)
+- **ORM**: SQLAlchemy 2.0 (Declarative mapping and session management)
+- **Validation**: Pydantic V2 (Strict request schema type-checking)
+- **Security**: `python-jose` (JWT), `passlib` / `bcrypt` (Hashing)
+
+### Frontend
+- **Templating**: Jinja2 (Served directly by Starlette)
+- **Styling**: Vanilla CSS (CSS Variables, Flexbox/Grid)
+- **Interactivity**: Vanilla JavaScript (ES6 Fetch API `apiFetch` wrapper intercepting JWTs via localStorage)
+
+---
+
+## 📂 Project Architecture
+
+The application strictly follows a **Domain-Driven Design (DDD)** Pattern to eliminate circular imports and maximize maintainability.
+
+```text
+app/
+ ├── core/              # Global Configurations (Settings, JWT keys, Dependency inj.)
+ ├── db/                # DB Session setup, Schema generation, Engine events
+ ├── models/            # SQLAlchemy native database entities
+ ├── schemas/           # Pydantic validation (Inbound payloads & Outbound serializers)
+ ├── services/          # Business Logic (Keeps routers extremely thin)
+ ├── routes/            # FASTApi end-routes (Controllers mapping to services)
+ ├── static/            # Native CSS and Javascript files
+ └── templates/         # Jinja2 HTML layout components
 ```
 
-### 2. Create and activate a virtual environment
+---
 
+## ⚙️ Local Development Setup
+
+### 1. Prerequisites
+Ensure you have **Python 3.10+** installed on your system.
+
+### 2. Environment Activation
+It is highly recommended to run this inside a virtual environment.
 ```bash
 python -m venv venv
-source venv/bin/activate        # Linux / macOS
-# venv\Scripts\activate         # Windows
+
+# For Linux / Mac (fish shell):
+source venv/bin/activate.fish
+
+# For Bash / Zsh:
+source venv/bin/activate
 ```
 
-### 3. Install dependencies
-
+### 3. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure environment variables
-
-Edit `.env` and update values (especially `SECRET_KEY` in production):
-
-```bash
-nano .env
-```
-
-### 5. Run the development server
-
+### 4. Run the Dev Server
+Start the Uvicorn ASGI server with live-reloading enabled:
 ```bash
 uvicorn app.main:app --reload
 ```
-
-Visit **http://127.0.0.1:8000** — the home page will load.
-Interactive API docs are at **http://127.0.0.1:8000/docs**.
+*Note: SQLite database (`app/db/devtrack.db`) is automatically generated upon the first boot via SQLAlchemy's `create_all()` hook.*
 
 ---
 
-## Adding a New Feature (recommended pattern)
+## 🚦 Usage & Testing
 
-| Layer | Where | What goes there |
-|---|---|---|
-| Model | `app/models/` | SQLAlchemy ORM class |
-| Schema | `app/schemas/` | Pydantic request/response models |
-| Service | `app/services/` | Business logic (CRUD helpers) |
-| Route | `app/routes/` | FastAPI router with endpoints |
-| Template | `app/templates/` | Jinja2 HTML templates |
-
-After adding a model, import it in `app/db/init_db.py` so the table is created automatically on startup.
+1. **Access the App:** Open your browser and navigate to `http://127.0.0.1:8000`.
+2. **Access Swagger Docs:** FastAPI automatically constructs beautiful API swagger documentation. Navigate to `http://127.0.0.1:8000/docs` to test endpoints manually!
+3. **App Flow**:
+   - Create a new account.
+   - Navigate to the Dashboard.
+   - Spin up a new Project.
+   - Navigate into the Project and create a few Tasks assigned to specific dates.
+   - Mark tasks as `Completed` directly from the Dashboard view!
 
 ---
 
-## Security Checklist (before deploying)
+## 🔮 Future Roadmap
 
-- [ ] Set `DEBUG=False` in `.env`
-- [ ] Replace `SECRET_KEY` with a strong random value
-- [ ] Move to a production database (PostgreSQL recommended)
-- [ ] Put the app behind a reverse proxy (Nginx / Caddy)
-- [ ] Add HTTPS (Let's Encrypt / Cloudflare)
+- Migrating the database connector to `asyncpg` (PostgreSQL) for large-scale production deployments.
+- Integrating `Alembic` for automated database schema migrations.
+- Adding a collaborative "Team" feature letting users share active Projects via bridging tables.
