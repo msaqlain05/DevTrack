@@ -20,30 +20,77 @@
 <div class="inline-form mb-3" id="projectForm">
   <div class="inline-form-inner">
     <form onsubmit="handleCreateProject(event)">
+
+      <!-- Row 1: Name + Type -->
       <div class="grid-2">
         <div class="form-group">
           <label class="form-label">Project name *</label>
-          <input class="form-control" id="projName" placeholder="e.g. My API" required>
+          <input class="form-control" id="projName" placeholder="e.g. My Portfolio" required>
         </div>
         <div class="form-group">
-          <label class="form-label">Description</label>
-          <input class="form-control" id="projDesc" placeholder="Optional">
+          <label class="form-label">Project type</label>
+          <select class="form-control" id="projType">
+            <option value="">— Select type —</option>
+            <option value="web-app">🌐 Web App</option>
+            <option value="website">📄 Website</option>
+            <option value="mobile-app">📱 Mobile App</option>
+            <option value="desktop-app">🖥 Desktop App</option>
+            <option value="api">🔌 API / Service</option>
+            <option value="cli">⌨️ CLI Tool</option>
+            <option value="library">📦 Library / SDK</option>
+            <option value="other">🔧 Other</option>
+          </select>
         </div>
       </div>
+
+      <!-- Row 2: Description + Role -->
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <input class="form-control" id="projDesc" placeholder="Optional — brief summary">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dev role</label>
+          <select class="form-control" id="projRole" onchange="updateTechOptions()">
+            <option value="">— Select role —</option>
+            <option value="fullstack">⚡ Full Stack</option>
+            <option value="frontend">🎨 Frontend</option>
+            <option value="backend">⚙️ Backend</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row 3: Language + Framework (dynamic) -->
+      <div class="grid-2" id="techRow" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Language</label>
+          <select class="form-control" id="projLang" onchange="updateFrameworks()">
+            <option value="">— Select language —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Framework</label>
+          <select class="form-control" id="projFramework">
+            <option value="">— Select framework —</option>
+          </select>
+        </div>
+      </div>
+
       <div class="flex gap-2" style="justify-content:flex-end">
         <button type="button" class="btn btn-ghost btn-sm" onclick="toggleProjectForm()">Cancel</button>
-        <button type="submit" class="btn btn-primary btn-sm" id="projSubmitBtn">Create</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="projSubmitBtn">Create project</button>
       </div>
     </form>
   </div>
 </div>
 
+
 <!-- ── Stats row ─────────────────────────────────────────────── -->
 <div class="stats-row mb-4" id="statsRow">
   <div class="stat-card skeleton" id="s-projects" style="height:88px;border-radius:var(--radius);"></div>
-  <div class="stat-card skeleton" id="s-tasks"    style="height:88px;border-radius:var(--radius);"></div>
-  <div class="stat-card skeleton" id="s-done"     style="height:88px;border-radius:var(--radius);"></div>
-  <div class="stat-card skeleton" id="s-active"   style="height:88px;border-radius:var(--radius);"></div>
+  <div class="stat-card skeleton" id="s-tasks" style="height:88px;border-radius:var(--radius);"></div>
+  <div class="stat-card skeleton" id="s-done" style="height:88px;border-radius:var(--radius);"></div>
+  <div class="stat-card skeleton" id="s-active" style="height:88px;border-radius:var(--radius);"></div>
 </div>
 
 <!-- ── Charts row ────────────────────────────────────────────── -->
@@ -63,29 +110,15 @@
 </div>
 
 <!-- ── Projects + Tasks ──────────────────────────────────────── -->
-<div class="grid-2">
-  <section>
-    <div class="section-header">
-      <h2>Projects</h2>
-    </div>
-    <div id="projectsList">
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-    </div>
-  </section>
-
-  <section>
-    <div class="section-header">
-      <h2>Your Tasks</h2>
-      <span class="badge badge-pending" id="taskCount" style="display:none;"></span>
-    </div>
-    <div id="tasksList">
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-    </div>
-  </section>
-</div>
+<section>
+  <div class="section-header">
+    <h2>Projects</h2>
+  </div>
+  <div id="projectsList">
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+  </div>
+</section>
 
 {% endblock %}
 
@@ -99,13 +132,13 @@
 
   // ── XSS helper ─────────────────────────────────────────────────
   function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   // ── Project form toggle ─────────────────────────────────────────
   function toggleProjectForm() {
     const form = document.getElementById('projectForm');
-    const btn  = document.getElementById('newProjBtn');
+    const btn = document.getElementById('newProjBtn');
     const open = form.classList.toggle('open');
     btn.textContent = open ? '✕ Close' : '＋ New project';
     if (open) setTimeout(() => document.getElementById('projName').focus(), 60);
@@ -127,12 +160,12 @@
 
   // ── Chart renderer ──────────────────────────────────────────────
   const C = {
-    pending:    '#e3b341',
-    active:     '#58a6ff',
-    completed:  '#3fb950',
-    grid:       '#30363d',
-    text:       '#8b949e',
-    bg:         '#161b22',
+    pending: '#e3b341',
+    active: '#58a6ff',
+    completed: '#3fb950',
+    grid: '#30363d',
+    text: '#8b949e',
+    bg: '#161b22',
   };
 
   function buildStatusChart(pending, active, done) {
@@ -141,7 +174,7 @@
     statusChartInst = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['Pending','In Progress','Completed'],
+        labels: ['Pending', 'In Progress', 'Completed'],
         datasets: [{
           data: [pending, active, done],
           backgroundColor: [C.pending, C.active, C.completed],
@@ -175,7 +208,7 @@
           label: 'Tasks',
           data,
           backgroundColor: data.map(() => C.active + '88'),
-          borderColor:     data.map(() => C.active),
+          borderColor: data.map(() => C.active),
           borderWidth: 2,
           borderRadius: 6,
           borderSkipped: false,
@@ -185,9 +218,11 @@
         animation: { duration: 700, easing: 'easeOutQuart' },
         plugins: {
           legend: { display: false },
-          tooltip: { backgroundColor: '#1c2128', borderColor: C.grid, borderWidth: 1, callbacks: {
-            label: ctx => ` ${ctx.parsed.y} task${ctx.parsed.y !== 1 ? 's' : ''}`
-          }}
+          tooltip: {
+            backgroundColor: '#1c2128', borderColor: C.grid, borderWidth: 1, callbacks: {
+              label: ctx => ` ${ctx.parsed.y} task${ctx.parsed.y !== 1 ? 's' : ''}`
+            }
+          }
         },
         scales: {
           x: {
@@ -219,14 +254,14 @@
         `${projects.length} project${projects.length !== 1 ? 's' : ''} · ${tasks.length} task${tasks.length !== 1 ? 's' : ''}`;
 
       // ── Stats ─────────────────────────────────────────────────
-      const pending  = tasks.filter(t => t.status === 'pending').length;
-      const active   = tasks.filter(t => t.status === 'in-progress').length;
-      const done     = tasks.filter(t => t.status === 'completed').length;
+      const pending = tasks.filter(t => t.status === 'pending').length;
+      const active = tasks.filter(t => t.status === 'in-progress').length;
+      const done = tasks.filter(t => t.status === 'completed').length;
 
-      setStatCard('s-projects', '🗂', 'Projects',    projects.length, '#58a6ff');
-      setStatCard('s-tasks',    '📋', 'Total Tasks', tasks.length,    '#8b949e');
-      setStatCard('s-done',     '✅', 'Completed',   done,            '#3fb950');
-      setStatCard('s-active',   '🔄', 'In Progress', active,          '#e3b341');
+      setStatCard('s-projects', '🗂', 'Projects', projects.length, '#58a6ff');
+      setStatCard('s-tasks', '📋', 'Total Tasks', tasks.length, '#8b949e');
+      setStatCard('s-done', '✅', 'Completed', done, '#3fb950');
+      setStatCard('s-active', '🔄', 'In Progress', active, '#e3b341');
 
       // ── Charts ────────────────────────────────────────────────
       buildStatusChart(pending, active, done);
@@ -236,7 +271,7 @@
       projects.forEach(p => { perProject[p.id] = { name: p.name, count: 0 }; });
       tasks.forEach(t => { if (perProject[t.project_id]) perProject[t.project_id].count++; });
       const projLabels = Object.values(perProject).map(p => p.name);
-      const projData   = Object.values(perProject).map(p => p.count);
+      const projData = Object.values(perProject).map(p => p.count);
       buildProjectChart(projLabels, projData);
 
       // ── Projects list ─────────────────────────────────────────
@@ -248,53 +283,28 @@
           <p>No projects yet.<br>Create one to get started.</p></div>`;
       } else {
         projects.forEach((p, i) => {
-          projectsCache[p.id] = p;
           const taskCount = perProject[p.id]?.count ?? 0;
           const a = document.createElement('a');
           a.className = 'project-card';
           a.href = `/project/${p.id}`;
           a.style.animationDelay = `${i * 0.05}s`;
+
+          const TYPE_ICONS = { 'web-app':'🌐','website':'📄','mobile-app':'📱','desktop-app':'🖥','api':'🔌','cli':'⌨️','library':'📦','other':'🔧' };
+          const ROLE_LABELS = { 'fullstack':'⚡ Full Stack','frontend':'🎨 Frontend','backend':'⚙️ Backend' };
+
+          const typePill  = p.project_type ? `<span class="meta-pill">${TYPE_ICONS[p.project_type] || ''} ${p.project_type.replace('-',' ')}</span>` : '';
+          const rolePill  = p.role         ? `<span class="meta-pill">${ROLE_LABELS[p.role] || p.role}</span>` : '';
+          const langPill  = p.language     ? `<span class="meta-pill lang-pill">${p.language}</span>` : '';
+          const framePill = p.framework    ? `<span class="meta-pill frame-pill">${p.framework}</span>` : '';
+
           a.innerHTML = `
             <div class="card-title">${escHtml(p.name)}</div>
-            <div class="card-meta">${p.description ? escHtml(p.description) : 'No description'}</div>
-            <div style="margin-top:.5rem;">
-              <span class="badge badge-pending" style="font-size:.68rem;">${taskCount} task${taskCount !== 1 ? 's' : ''}</span>
+            <div class="card-meta" style="margin:.3rem 0 .6rem;">${p.description ? escHtml(p.description) : ''}</div>
+            <div class="meta-pills">
+              ${typePill}${rolePill}${langPill}${framePill}
+              <span class="meta-pill task-pill">${taskCount} task${taskCount !== 1 ? 's' : ''}</span>
             </div>`;
           pList.appendChild(a);
-        });
-      }
-
-      // ── Tasks list ────────────────────────────────────────────
-      const tList = document.getElementById('tasksList');
-      tList.innerHTML = '';
-
-      const badge = document.getElementById('taskCount');
-      if (tasks.length) { badge.textContent = `${tasks.length}`; badge.style.display = ''; }
-
-      if (!tasks.length) {
-        tList.innerHTML = `<div class="empty-state">
-          <span class="empty-icon">✅</span>
-          <p>No tasks yet.</p></div>`;
-      } else {
-        tasks.forEach((t, i) => {
-          const proj   = projectsCache[t.project_id];
-          const isDone = t.status === 'completed';
-          const item   = document.createElement('div');
-          item.className = `task-item${isDone ? ' done' : ''}`;
-          item.style.animationDelay = `${i * 0.04}s`;
-          item.innerHTML = `
-            <div>
-              <div class="task-title">${escHtml(t.title)}</div>
-              <div class="task-meta">
-                <span class="badge badge-${t.status}">${t.status.replace('-',' ')}</span>
-                ${proj ? `<span>· <strong>${escHtml(proj.name)}</strong></span>` : ''}
-                ${t.date ? `<span>· 🗓 ${t.date}</span>` : ''}
-              </div>
-            </div>
-            <div class="task-actions">
-              ${!isDone ? `<button class="btn btn-sm btn-primary" onclick="markDone(${t.id})">✔ Done</button>` : ''}
-            </div>`;
-          tList.appendChild(item);
         });
       }
 
@@ -305,27 +315,33 @@
 
   async function handleCreateProject(e) {
     e.preventDefault();
-    const name = document.getElementById('projName').value.trim();
-    const desc = document.getElementById('projDesc').value.trim();
-    const btn  = document.getElementById('projSubmitBtn');
+    const name      = document.getElementById('projName').value.trim();
+    const desc      = document.getElementById('projDesc').value.trim();
+    const proj_type = document.getElementById('projType').value;
+    const role      = document.getElementById('projRole').value;
+    const language  = document.getElementById('projLang').value;
+    const framework = document.getElementById('projFramework').value;
+    const btn = document.getElementById('projSubmitBtn');
     btn.disabled = true; btn.textContent = 'Creating…';
     try {
-      await apiFetch('/projects/', { method: 'POST', body: JSON.stringify({ name, description: desc || null }) });
+      await apiFetch('/projects/', { method: 'POST', body: JSON.stringify({
+        name,
+        description:  desc      || null,
+        project_type: proj_type || null,
+        role:         role      || null,
+        language:     language  || null,
+        framework:    framework || null,
+      })});
       toggleProjectForm();
-      document.getElementById('projName').value = '';
-      document.getElementById('projDesc').value = '';
+      ['projName','projDesc','projType','projRole','projLang','projFramework'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      document.getElementById('techRow').style.display = 'none';
       showToast('Project created! 🚀', 'success');
       loadDashboard();
     } catch (err) { showToast(err.message, 'error'); }
     finally { btn.disabled = false; btn.textContent = 'Create'; }
-  }
-
-  async function markDone(taskId) {
-    try {
-      await apiFetch(`/tasks/${taskId}`, { method: 'PUT', body: JSON.stringify({ status: 'completed' }) });
-      showToast('Task completed! 🎉', 'success');
-      loadDashboard();
-    } catch (err) { showToast(err.message, 'error'); }
   }
 
   document.addEventListener('DOMContentLoaded', loadDashboard);
