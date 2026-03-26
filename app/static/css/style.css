@@ -439,3 +439,34 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6); curs
 .text-sm   { font-size: .8125rem; }
 .text-muted{ color: var(--text-2); }
 .text-center{ text-align: center; }
+
+/* ─── Segmented Status Control ───────────────────────────────── */
+.status-seg {
+  display: inline-flex;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+.seg-btn {
+  padding: .3rem .65rem;
+  font-size: .72rem;
+  font-weight: 600;
+  font-family: var(--font);
+  border: none;
+  border-right: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  letter-spacing: .01em;
+}
+.seg-btn:last-child { border-right: none; }
+.seg-btn:hover { background: var(--surface-2); color: var(--text-1); }
+
+/* Active states per status */
+.seg-btn.seg-pending.active    { background: rgba(227,179,65,.15); color: var(--yellow);  }
+.seg-btn.seg-inprogress.active { background: var(--accent-dim);    color: var(--accent);  }
+.seg-btn.seg-done.active       { background: var(--green-dim);     color: var(--green);   }
+

@@ -115,18 +115,18 @@
           <div style="min-width:0;flex:1">
             <div class="task-title">${escHtml(t.title)}</div>
             ${t.description ? `<div class="text-muted text-sm mb-1">${escHtml(t.description)}</div>` : ''}
-            <div class="task-meta">
-              <span class="badge badge-${t.status}">${t.status.replace('-',' ')}</span>
-              ${t.date ? `<span>🗓 ${t.date}</span>` : ''}
-            </div>
+            ${t.date ? `<div class="task-meta"><span>🗓 ${t.date}</span></div>` : ''}
           </div>
-          <div class="task-actions">
-            <select class="status-select" onchange="updateStatus(${t.id}, this.value)">
-              <option value="pending"     ${t.status==='pending'     ?'selected':''}>Pending</option>
-              <option value="in-progress" ${t.status==='in-progress' ?'selected':''}>In Progress</option>
-              <option value="completed"   ${t.status==='completed'   ?'selected':''}>Completed</option>
-            </select>
-            <button class="btn btn-danger btn-sm" onclick="deleteTask(${t.id})">Del</button>
+          <div class="task-actions" style="flex-direction:column;align-items:flex-end;gap:.5rem;">
+            <div class="status-seg" id="seg-${t.id}">
+              <button class="seg-btn ${t.status==='pending'     ? 'seg-pending active'     : 'seg-pending'}"
+                onclick="updateStatus(${t.id},'pending')" title="Pending">⏳ Pending</button>
+              <button class="seg-btn ${t.status==='in-progress' ? 'seg-inprogress active' : 'seg-inprogress'}"
+                onclick="updateStatus(${t.id},'in-progress')" title="In Progress">🔄 Active</button>
+              <button class="seg-btn ${t.status==='completed'   ? 'seg-done active'       : 'seg-done'}"
+                onclick="updateStatus(${t.id},'completed')" title="Completed">✅ Done</button>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="deleteTask(${t.id})">Delete</button>
           </div>`;
         tList.appendChild(item);
       });
