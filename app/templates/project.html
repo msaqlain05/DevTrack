@@ -42,7 +42,7 @@
 </div>
 
 <div id="tasksList">
-    <div style="color: var(--text-secondary); text-align: center; margin-top: 2rem;">Loading tasks...</div>
+    <div class="loading-text">Fetching tasks...</div>
 </div>
 
 {% endblock %}
@@ -146,9 +146,10 @@
             toggleTaskForm();
             document.getElementById('taskTitle').value = '';
             document.getElementById('taskDesc').value = '';
+            showToast('Task added successfully', 'success');
             loadProjectData(); // Reload silently
         } catch (err) {
-            alert("Error creating task: " + err.message);
+            showToast("Error creating task: " + err.message, 'error');
         } finally {
             btn.disabled = false;
         }
@@ -160,9 +161,10 @@
                 method: 'PUT',
                 body: JSON.stringify({ status: newStatus })
             });
+            showToast(`Task marked as ${newStatus}`, 'success');
             loadProjectData();
         } catch (err) {
-            alert("Error updating task: " + err.message);
+            showToast("Error updating task: " + err.message, 'error');
         }
     }
 
@@ -170,9 +172,10 @@
         if(!confirm("Are you sure you want to delete this task?")) return;
         try {
             await apiFetch(`/tasks/${taskId}`, { method: 'DELETE' });
+            showToast('Task deleted successfully', 'success');
             loadProjectData();
         } catch (err) {
-            alert("Error deleting task: " + err.message);
+            showToast("Error deleting task: " + err.message, 'error');
         }
     }
 
@@ -182,7 +185,7 @@
             await apiFetch(`/projects/${projectId}`, { method: 'DELETE' });
             window.location.href = '/dashboard';
         } catch (err) {
-            alert("Error deleting project: " + err.message);
+            showToast("Error deleting project: " + err.message, 'error');
         }
     }
 

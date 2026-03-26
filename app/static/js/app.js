@@ -68,14 +68,36 @@ async function apiFetch(endpoint, options = {}) {
     }
 }
 
-// Display error alert utility
+// Display error/success alert utility (Toast)
+function showToast(message, type = 'error') {
+    const container = document.getElementById('toastContainer');
+    if (!container) {
+        // Fallback if container misses
+        alert(`${type.toUpperCase()}: ${message}`);
+        return;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    container.appendChild(toast);
+
+    // Auto remove after 3.5 seconds
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        toast.addEventListener('animationend', () => toast.remove());
+    }, 3500);
+}
+
+// Legacy inline error fallback mapped to toast if inline element doesn't exist
 function showError(elementId, message) {
     const el = document.getElementById(elementId);
     if(el) {
         el.textContent = message;
         el.style.display = 'block';
     } else {
-        alert(message);
+        showToast(message, 'error');
     }
 }
 

@@ -31,7 +31,7 @@
         </div>
 
         <div id="projectsList">
-            <div style="color: var(--text-secondary); text-align: center; margin-top: 2rem;">Loading projects...</div>
+            <div class="loading-text">Fetching projects...</div>
         </div>
     </div>
 
@@ -39,7 +39,7 @@
     <div>
         <h2 class="mb-4">Today's Tasks</h2>
         <div id="todayTasksList">
-            <div style="color: var(--text-secondary); text-align: center; margin-top: 2rem;">Loading tasks...</div>
+            <div class="loading-text">Fetching tasks...</div>
         </div>
     </div>
 </div>
@@ -127,9 +127,10 @@
             toggleProjectForm();
             document.getElementById('projName').value = '';
             document.getElementById('projDesc').value = '';
+            showToast('Project created successfully!', 'success');
             loadDashboard(); // Reload data silently
         } catch (err) {
-            alert("Error creating project: " + err.message);
+            showToast("Error creating project: " + err.message, 'error');
         } finally {
             btn.disabled = false;
         }
@@ -141,9 +142,10 @@
                 method: 'PUT',
                 body: JSON.stringify({ status: 'completed' })
             });
+            showToast('Task marked as completed', 'success');
             loadDashboard(); // Refresh
         } catch (err) {
-            alert("Error updating task: " + err.message);
+            showToast("Error updating task: " + err.message, 'error');
         }
     }
 
