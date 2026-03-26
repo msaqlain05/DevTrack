@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date as python_date
 from enum import Enum
 
 from sqlalchemy import Date, ForeignKey, Integer, String, Text
@@ -19,7 +19,7 @@ class Task(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
-    date: Mapped[date | None] = mapped_column(Date)
+    date: Mapped[python_date | None] = mapped_column(Date)
     status: Mapped[str] = mapped_column(String(50), default=TaskStatus.pending.value, nullable=False)
     
     project_id: Mapped[int] = mapped_column(

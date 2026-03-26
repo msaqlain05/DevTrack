@@ -1,27 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block title %}DevTrack{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}" />
-  {% block head %}{% endblock %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DevTrack{% endblock %}</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-  <header>
     <nav class="navbar">
-      <span class="brand">DevTrack</span>
+        <div class="nav-container">
+            <a href="/dashboard" class="brand">🚀 DevTrack</a>
+            <div class="nav-links" id="authNav">
+                <!-- Dynamically populated by JS based on Auth state -->
+            </div>
+        </div>
     </nav>
-  </header>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
 
-  <main class="container">
-    {% block content %}{% endblock %}
-  </main>
-
-  <footer>
-    <p>&copy; 2026 DevTrack</p>
-  </footer>
-
-  {% block scripts %}{% endblock %}
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

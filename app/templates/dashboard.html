@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}DevTrack - Dashboard{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-4">
+    <h1>Dashboard</h1>
+</div>
+
+<div class="grid">
+    <!-- Left Column: Projects -->
+    <div>
+        <div class="flex-between mb-4">
+            <h2>Your Projects</h2>
+            <button class="btn" onclick="toggleProjectForm()">+ New</button>
+        </div>
+        
+        <div class="card" id="projectFormCard" style="display: none; border-color: var(--accent-color);">
+            <form onsubmit="handleCreateProject(event)">
+                <div class="form-group">
+                    <input type="text" id="projName" class="form-control" placeholder="Project Name" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="projDesc" class="form-control" placeholder="Description (optional)">
+                </div>
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <button type="button" class="btn" onclick="toggleProjectForm()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="projectsList">
+            <div style="color: var(--text-secondary); text-align: center; margin-top: 2rem;">Loading projects...</div>
+        </div>
+    </div>
+
+    <!-- Right Column: Today's Tasks -->
+    <div>
+        <h2 class="mb-4">Today's Tasks</h2>
+        <div id="todayTasksList">
+            <div style="color: var(--text-secondary); text-align: center; margin-top: 2rem;">Loading tasks...</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    if (!localStorage.getItem('token')) {
+        window.location.href = '/login';
+    }
+
+    let projectsCache = {};
+
+    function toggleProjectForm() {
+        const pForm = document.getElementById('projectFormCard');
+        pForm.style.display = pForm.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function loadDashboard() {
+        try {
+            // 1. Load Projects
+            const projects = await apiFetch('/projects/');
+            const pList = document.getElementById('projectsList');
+            
+            pList.innerHTML = '';
+            if (projects.length === 0) {
+                pList.innerHTML = `<div class="card"><div class="card-text text-center">No projects yet. Create one to get started!</div></div>`;
+            } else {
+                projects.forEach(p => {
+                    projectsCache[p.id] = p; // Store for task rendering
+                    pList.innerHTML += `
+                        <a href="/project/${p.id}" style="display:block; text-decoration:none;">
+                            <div class="card" style="transition: border-color 0.2s; cursor: pointer;" onmouseover="this.style.borderColor='var(--accent-color)'" onmouseout="this.style.borderColor='var(--border-color)'">
+                                <div class="card-title">${p.name}</div>
+                                ${p.description ? `<div class="card-text">${p.description}</div>` : ''}
+                            </div>
+                        </a>
+                    `;
+                });
+            }
+
+            // 2. Load Today's Tasks
+            const today = new Date().toISOString().split('T')[0];
+            const tasks = await apiFetch(`/tasks/?date=${today}`);
+            const tList = document.getElementById('todayTasksList');
+            
+            tList.innerHTML = '';
+            if (tasks.length === 0) {
+                tList.innerHTML = `<div class="card"><div class="card-text text-center">No tasks scheduled for today. Kick back and relax! ☕</div></div>`;
+            } else {
+                tasks.forEach(t => {
+                    const projInfo = projectsCache[t.project_id] ? `in <strong>${projectsCache[t.project_id].name}</strong>` : '';
+                    const isDone = t.status === 'completed';
+                    tList.innerHTML += `
+                        <div class="card" style="display: flex; justify-content: space-between; align-items: flex-start; opacity: ${isDone ? '0.6' : '1'}">
+                            <div>
+                                <div style="font-weight: 500; font-size: 1rem; margin-bottom: 0.2rem; text-decoration: ${isDone ? 'line-through' : 'none'}">${t.title}</div>
+                                <div class="card-text" style="margin-bottom: 0.5rem">${projInfo}</div>
+                                <span class="status-badge status-${t.status}">${t.status.replace('-', ' ')}</span>
+                            </div>
+                            <!-- Clicking updates status dynamically without reload -->
+                            ${!isDone ? `<button class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="markDone(${t.id})">✔ Done</button>` : ''}
+                        </div>
+                    `;
+                });
+            }
+        } catch (err) {
+            console.error("Dashboard Load Error:", err);
+            // It might fail if token is invalid, handled by apiFetch automatically
+        }
+    }
+
+    async function handleCreateProject(e) {
+        e.preventDefault();
+        const name = document.getElementById('projName').value;
+        const desc = document.getElementById('projDesc').value;
+        const btn = e.target.querySelector('button[type="submit"]');
+
+        try {
+            btn.disabled = true;
+            await apiFetch('/projects/', {
+                method: 'POST',
+                body: JSON.stringify({ name, description: desc || null })
+            });
+            toggleProjectForm();
+            document.getElementById('projName').value = '';
+            document.getElementById('projDesc').value = '';
+            loadDashboard(); // Reload data silently
+        } catch (err) {
+            alert("Error creating project: " + err.message);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function markDone(taskId) {
+        try {
+            await apiFetch(`/tasks/${taskId}`, {
+                method: 'PUT',
+                body: JSON.stringify({ status: 'completed' })
+            });
+            loadDashboard(); // Refresh
+        } catch (err) {
+            alert("Error updating task: " + err.message);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadDashboard);
+</script>
+{% endblock %}

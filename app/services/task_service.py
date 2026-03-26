@@ -40,6 +40,16 @@ class TaskService:
         return query.all()
 
     @staticmethod
+    def get_all_tasks(
+        db: Session, current_user: User, filter_date: date | None = None
+    ) -> list[Task]:
+        """Fetch all tasks owned by user across all projects."""
+        query = db.query(Task).filter(Task.owner_id == current_user.id)
+        if filter_date:
+            query = query.filter(Task.date == filter_date)
+        return query.all()
+
+    @staticmethod
     def get_task_by_id(db: Session, task_id: int, current_user: User) -> Task:
         task = db.query(Task).filter(Task.id == task_id).first()
         if not task:

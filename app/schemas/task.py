@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date as python_date
 
 from pydantic import BaseModel
 
@@ -8,7 +8,7 @@ from app.models.task import TaskStatus
 class TaskBase(BaseModel):
     title: str
     description: str | None = None
-    date: date | None = None
+    date: python_date | None = None
     status: TaskStatus = TaskStatus.pending
     project_id: int
 
@@ -20,7 +20,7 @@ class TaskCreate(TaskBase):
 class TaskUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
-    date: date | None = None
+    date: python_date | None = None
     status: TaskStatus | None = None
 
 

@@ -33,6 +33,16 @@ def list_tasks_by_project(
     return TaskService.get_tasks_by_project(db, project_id, current_user, filter_date)
 
 
+@router.get("/", response_model=list[TaskOut])
+def list_tasks(
+    filter_date: date | None = Query(None, alias="date"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get all tasks owned by user across all projects with optional date filtering."""
+    return TaskService.get_all_tasks(db, current_user, filter_date)
+
+
 @router.put("/{task_id}", response_model=TaskOut)
 def update_task(
     task_id: int,
