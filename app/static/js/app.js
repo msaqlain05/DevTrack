@@ -27,7 +27,10 @@ function showToast(message, type = 'error') {
   const icons = { success: '✓', error: '✕' };
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  toast.innerHTML = `<span>${icons[type] || '!'}</span> ${message}`;
+  const iconEl = document.createElement('span');
+  iconEl.textContent = icons[type] || '!';
+  toast.appendChild(iconEl);
+  toast.append(` ${String(message)}`);
   container.appendChild(toast);
 
   setTimeout(() => {

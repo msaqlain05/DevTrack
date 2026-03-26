@@ -292,10 +292,10 @@
           const TYPE_ICONS = { 'web-app': '🌐', 'website': '📄', 'mobile-app': '📱', 'desktop-app': '🖥', 'api': '🔌', 'cli': '⌨️', 'library': '📦', 'other': '🔧' };
           const ROLE_LABELS = { 'fullstack': '⚡ Full Stack', 'frontend': '🎨 Frontend', 'backend': '⚙️ Backend' };
 
-          const typePill = p.project_type ? `<span class="meta-pill">${TYPE_ICONS[p.project_type] || ''} ${p.project_type.replace('-', ' ')}</span>` : '';
-          const rolePill = p.role ? `<span class="meta-pill">${ROLE_LABELS[p.role] || p.role}</span>` : '';
-          const langPill = p.language ? `<span class="meta-pill lang-pill">${p.language}</span>` : '';
-          const framePill = p.framework ? `<span class="meta-pill frame-pill">${p.framework}</span>` : '';
+          const typePill = p.project_type ? `<span class="meta-pill">${TYPE_ICONS[p.project_type] || ''} ${escHtml(p.project_type.replace('-', ' '))}</span>` : '';
+          const rolePill = p.role ? `<span class="meta-pill">${escHtml(ROLE_LABELS[p.role] || p.role)}</span>` : '';
+          const langPill = p.language ? `<span class="meta-pill lang-pill">${escHtml(p.language)}</span>` : '';
+          const framePill = p.framework ? `<span class="meta-pill frame-pill">${escHtml(p.framework)}</span>` : '';
 
           a.innerHTML = `
             <div class="card-title">${escHtml(p.name)}</div>

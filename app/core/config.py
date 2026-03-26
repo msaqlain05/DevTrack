@@ -32,3 +32,18 @@ settings = Settings()
 # Vercel serverless functions have a read-only filesystem except /tmp.
 if os.getenv("VERCEL") and settings.DATABASE_URL == "sqlite:///./app/db/devtrack.db":
     settings.DATABASE_URL = "sqlite:////tmp/devtrack.db"
+
+_INSECURE_DEFAULTS = {
+    "change-me-in-production",
+    "change-jwt-secret-in-production",
+}
+
+if os.getenv("VERCEL"):
+    if settings.SECRET_KEY in _INSECURE_DEFAULTS or len(settings.SECRET_KEY) < 32:
+        raise RuntimeError(
+            "Insecure SECRET_KEY. Set a strong SECRET_KEY in Vercel environment variables."
+        )
+    if settings.JWT_SECRET_KEY in _INSECURE_DEFAULTS or len(settings.JWT_SECRET_KEY) < 32:
+        raise RuntimeError(
+            "Insecure JWT_SECRET_KEY. Set a strong JWT_SECRET_KEY in Vercel environment variables."
+        )

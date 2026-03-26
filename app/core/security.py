@@ -15,7 +15,11 @@ def hash_password(plain: str) -> str:
 
 def verify_password(plain: str, hashed: str) -> bool:
     """Return True if *plain* matches *hashed*."""
-    return bcrypt.checkpw(plain.encode(), hashed.encode())
+    try:
+        return bcrypt.checkpw(plain.encode(), hashed.encode())
+    except ValueError:
+        # Treat malformed hashes as invalid credentials, not server errors.
+        return False
 
 
 # ── JWT ───────────────────────────────────────────────────────────────────────

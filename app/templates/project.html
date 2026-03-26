@@ -78,10 +78,10 @@
       const ROLE_LABELS = { 'fullstack':'⚡ Full Stack','frontend':'🎨 Frontend','backend':'⚙️ Backend' };
 
       const pills = [
-        p.project_type ? `<span class="meta-pill">${TYPE_ICONS[p.project_type] || ''} ${p.project_type.replace('-',' ')}</span>` : '',
-        p.role         ? `<span class="meta-pill">${ROLE_LABELS[p.role] || p.role}</span>` : '',
-        p.language     ? `<span class="meta-pill lang-pill">${p.language}</span>` : '',
-        p.framework    ? `<span class="meta-pill frame-pill">${p.framework}</span>` : '',
+        p.project_type ? `<span class="meta-pill">${TYPE_ICONS[p.project_type] || ''} ${escHtml(p.project_type.replace('-',' '))}</span>` : '',
+        p.role         ? `<span class="meta-pill">${escHtml(ROLE_LABELS[p.role] || p.role)}</span>` : '',
+        p.language     ? `<span class="meta-pill lang-pill">${escHtml(p.language)}</span>` : '',
+        p.framework    ? `<span class="meta-pill frame-pill">${escHtml(p.framework)}</span>` : '',
       ].filter(Boolean).join('');
 
       document.getElementById('projDesc').innerHTML = `
