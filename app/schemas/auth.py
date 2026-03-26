@@ -17,9 +17,7 @@ class SignupRequest(BaseModel):
         return v
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+
 
 
 # ── Response schemas ──────────────────────────────────────────────────────────

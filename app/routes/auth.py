@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.auth import LoginRequest, SignupRequest, TokenResponse, UserOut
+from app.schemas.auth import SignupRequest, TokenResponse, UserOut
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -43,18 +43,24 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)) -> User:
 
 # ── POST /auth/login ──────────────────────────────────────────────────────────
 
+from fastapi.security import OAuth2PasswordRequestForm
+
 @router.post(
     "/login",
     response_model=TokenResponse,
     summary="Login and receive a JWT access token",
 )
-def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
+def login(
+    payload: OAuth2PasswordRequestForm = Depends(), 
+    db: Session = Depends(get_db)
+) -> TokenResponse:
     """
     Authenticate a user and return a JWT bearer token.
 
-    - Raises **401** if credentials are invalid.
+    - Raised **401** if credentials are invalid.
     """
-    user = db.query(User).filter(User.email == payload.email).first()
+    # OAuth2PasswordRequestForm inherently uses the 'username' field, which maps to our email
+    user = db.query(User).filter(User.email == payload.username).first()
 
     if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(

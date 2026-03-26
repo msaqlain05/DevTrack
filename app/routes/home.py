@@ -15,22 +15,22 @@ async def home(request: Request):
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     """Render the authentication page (Login)."""
-    return templates.TemplateResponse("auth.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="auth.html")
 
 
 @router.get("/signup", response_class=HTMLResponse)
 async def signup_page(request: Request):
     """Render the authentication page (Signup)."""
-    return templates.TemplateResponse("auth.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="auth.html")
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request):
     """Render the main dashboard."""
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="dashboard.html")
 
 
 @router.get("/project/{project_id}", response_class=HTMLResponse)
 async def project_page(request: Request, project_id: int):
     """Render the specific project view."""
-    return templates.TemplateResponse("project.html", {"request": request, "project_id": project_id})
+    return templates.TemplateResponse(request=request, name="project.html", context={"project_id": project_id})
