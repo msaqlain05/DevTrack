@@ -289,13 +289,13 @@
           a.href = `/project/${p.id}`;
           a.style.animationDelay = `${i * 0.05}s`;
 
-          const TYPE_ICONS = { 'web-app':'🌐','website':'📄','mobile-app':'📱','desktop-app':'🖥','api':'🔌','cli':'⌨️','library':'📦','other':'🔧' };
-          const ROLE_LABELS = { 'fullstack':'⚡ Full Stack','frontend':'🎨 Frontend','backend':'⚙️ Backend' };
+          const TYPE_ICONS = { 'web-app': '🌐', 'website': '📄', 'mobile-app': '📱', 'desktop-app': '🖥', 'api': '🔌', 'cli': '⌨️', 'library': '📦', 'other': '🔧' };
+          const ROLE_LABELS = { 'fullstack': '⚡ Full Stack', 'frontend': '🎨 Frontend', 'backend': '⚙️ Backend' };
 
-          const typePill  = p.project_type ? `<span class="meta-pill">${TYPE_ICONS[p.project_type] || ''} ${p.project_type.replace('-',' ')}</span>` : '';
-          const rolePill  = p.role         ? `<span class="meta-pill">${ROLE_LABELS[p.role] || p.role}</span>` : '';
-          const langPill  = p.language     ? `<span class="meta-pill lang-pill">${p.language}</span>` : '';
-          const framePill = p.framework    ? `<span class="meta-pill frame-pill">${p.framework}</span>` : '';
+          const typePill = p.project_type ? `<span class="meta-pill">${TYPE_ICONS[p.project_type] || ''} ${p.project_type.replace('-', ' ')}</span>` : '';
+          const rolePill = p.role ? `<span class="meta-pill">${ROLE_LABELS[p.role] || p.role}</span>` : '';
+          const langPill = p.language ? `<span class="meta-pill lang-pill">${p.language}</span>` : '';
+          const framePill = p.framework ? `<span class="meta-pill frame-pill">${p.framework}</span>` : '';
 
           a.innerHTML = `
             <div class="card-title">${escHtml(p.name)}</div>
@@ -315,25 +315,27 @@
 
   async function handleCreateProject(e) {
     e.preventDefault();
-    const name      = document.getElementById('projName').value.trim();
-    const desc      = document.getElementById('projDesc').value.trim();
+    const name = document.getElementById('projName').value.trim();
+    const desc = document.getElementById('projDesc').value.trim();
     const proj_type = document.getElementById('projType').value;
-    const role      = document.getElementById('projRole').value;
-    const language  = document.getElementById('projLang').value;
+    const role = document.getElementById('projRole').value;
+    const language = document.getElementById('projLang').value;
     const framework = document.getElementById('projFramework').value;
     const btn = document.getElementById('projSubmitBtn');
     btn.disabled = true; btn.textContent = 'Creating…';
     try {
-      await apiFetch('/projects/', { method: 'POST', body: JSON.stringify({
-        name,
-        description:  desc      || null,
-        project_type: proj_type || null,
-        role:         role      || null,
-        language:     language  || null,
-        framework:    framework || null,
-      })});
+      await apiFetch('/projects/', {
+        method: 'POST', body: JSON.stringify({
+          name,
+          description: desc || null,
+          project_type: proj_type || null,
+          role: role || null,
+          language: language || null,
+          framework: framework || null,
+        })
+      });
       toggleProjectForm();
-      ['projName','projDesc','projType','projRole','projLang','projFramework'].forEach(id => {
+      ['projName', 'projDesc', 'projType', 'projRole', 'projLang', 'projFramework'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -347,80 +349,45 @@
   // ── Tech stack logic ────────────────────────────────────────────
   const TECH_MAP = {
     frontend: {
-      'JavaScript':    ['React','Vue.js','Angular','Svelte','Solid.js','Astro','Preact','Alpine.js','Backbone.js'],
-      'TypeScript':    ['React','Vue.js','Angular','Svelte','Next.js','Nuxt.js','Remix','Qwik'],
-      'CSS / HTML':    ['Tailwind CSS','Bootstrap','Bulma','Foundation','Materialize','Pico CSS'],
-      'Dart':          ['Flutter Web'],
-      'Elm':           ['Elm (No framework)'],
-      'ClojureScript': ['Re-frame','Reagent'],
+      'JavaScript': ['React', 'Vue.js', 'Angular', 'Svelte', 'Solid.js', 'Astro'],
+      'TypeScript': ['React', 'Vue.js', 'Angular', 'Svelte', 'Next.js', 'Nuxt.js'],
     },
     backend: {
-      'Python':        ['FastAPI','Django','Flask','Tornado','Litestar','Falcon','Bottle','Quart'],
-      'JavaScript':    ['Express','NestJS','Fastify','Hapi.js','Koa','AdonisJS','Feathers.js'],
-      'TypeScript':    ['NestJS','Express','Fastify','AdonisJS','Hono'],
-      'Go':            ['Gin','Fiber','Echo','Chi','Gorilla Mux','Beego','Buffalo','Revel'],
-      'Java':          ['Spring Boot','Quarkus','Micronaut','Jakarta EE','Dropwizard','Vert.x','Helidon'],
-      'Kotlin':        ['Spring Boot','Ktor','Micronaut','Vert.x'],
-      'C#':            ['ASP.NET Core','Minimal APIs','Carter','FastEndpoints'],
-      'PHP':           ['Laravel','Symfony','CodeIgniter','CakePHP','Slim','Laminas','Phalcon','Yii'],
-      'Ruby':          ['Rails','Sinatra','Hanami','Padrino','Grape'],
-      'Rust':          ['Actix-web','Axum','Rocket','Warp','Salvo','Poem'],
-      'Elixir':        ['Phoenix','Plug','Bandit'],
-      'Scala':         ['Play Framework','Akka HTTP','http4s','Tapir'],
-      'Haskell':       ['Servant','Yesod','Scotty','Snap'],
-      'Clojure':       ['Luminus','Compojure','Reitit','Pedestal'],
-      'Dart':          ['Shelf','Dart Frog'],
-      'Swift':         ['Vapor','Hummingbird'],
-      'Perl':          ['Dancer2','Mojolicious','Catalyst'],
-      'Lua':           ['OpenResty / NGINX','Lapis'],
-      'OCaml':         ['Dream','Cohttp'],
-      'F#':            ['Giraffe','Falco','ASP.NET Core (F#)'],
-      'Nim':           ['Mummy','Prologue','Jester'],
-      'Zig':           ['Zap','http.zig'],
-      'Julia':         ['Genie.jl','HTTP.jl'],
-      'R':             ['Plumber','RestRserve'],
-      'C / C++':       ['Drogon','CppCMS','Crow','uWebSockets','Pistache'],
+      'Python': ['FastAPI', 'Django', 'Flask', 'Tornado'],
+      'JavaScript': ['Express', 'NestJS', 'Fastify', 'Hapi.js'],
+      'TypeScript': ['NestJS', 'Express', 'Fastify'],
+      'Go': ['Gin', 'Fiber', 'Echo', 'Chi'],
+      'Java': ['Spring Boot', 'Quarkus', 'Micronaut'],
+      'PHP': ['Laravel', 'Symfony', 'Slim'],
+      'Ruby': ['Rails', 'Sinatra'],
+      'Rust': ['Actix-web', 'Axum'],
+      'C#': ['ASP.NET Core'],
     },
     fullstack: {
-      'JavaScript':    ['Next.js','Nuxt.js','Remix','SvelteKit','Astro','Redwood.js','Blitz.js'],
-      'TypeScript':    ['Next.js','Nuxt.js','Remix','SvelteKit','Analog','Qwik City'],
-      'Python':        ['Django (Full Stack)','Flask + HTMX','FastAPI + Jinja2','Litestar + HTMX'],
-      'PHP':           ['Laravel (Full Stack)','Symfony (Full Stack)','WordPress','Drupal'],
-      'Ruby':          ['Rails (Full Stack)','Hotwire + Rails'],
-      'Elixir':        ['Phoenix LiveView'],
-      'Kotlin':        ['Ktor Full Stack','Kotlin + HTMX'],
-      'Java':          ['Spring Boot (Full Stack)','Vaadin','JHipster'],
-      'C#':            ['Blazor','ASP.NET Core MVC','Razor Pages'],
-      'Clojure':       ['Luminus Full Stack','Fulcro'],
-      'Scala':         ['Play Framework (Full)'],
-      'Go':            ['Go + Templ','Go + HTMX'],
+      'JavaScript': ['Next.js', 'Nuxt.js', 'Remix', 'SvelteKit', 'Astro'],
+      'TypeScript': ['Next.js', 'Nuxt.js', 'Remix', 'SvelteKit'],
+      'Python': ['Django (Full Stack)', 'Flask + HTMX'],
+      'PHP': ['Laravel (Full Stack)'],
+      'Ruby': ['Rails (Full Stack)'],
     },
   };
 
   const MOBILE_LANGS = {
-    'Dart':            ['Flutter'],
-    'Swift':           ['SwiftUI','UIKit','SwiftData','Combine'],
-    'Kotlin':          ['Jetpack Compose','Android SDK','Compose Multiplatform'],
-    'Java':            ['Android SDK (Java)','Spring Android'],
-    'JavaScript':      ['React Native','Expo','Ionic','NativeScript','Capacitor'],
-    'TypeScript':      ['React Native','Expo','Ionic','NativeScript'],
-    'C#':              ['MAUI (.NET)','Xamarin','Uno Platform'],
-    'C++':             ['Qt for Mobile','Cocos2d-x'],
-    'Python':          ['Kivy','BeeWare (Briefcase)'],
-    'Rust':            ['Tauri Mobile','Dioxus Native'],
-    'Go':              ['Fyne (Mobile)'],
-    'Ruby':            ['RubyMotion'],
+    'Dart': ['Flutter'],
+    'Swift': ['SwiftUI', 'UIKit'],
+    'Kotlin': ['Jetpack Compose', 'Android SDK'],
+    'JavaScript': ['React Native', 'Expo', 'Ionic'],
+    'TypeScript': ['React Native', 'Expo'],
   };
 
-
   function updateTechOptions() {
-    const role      = document.getElementById('projRole').value;
-    const techRow   = document.getElementById('techRow');
-    const langSel   = document.getElementById('projLang');
-    const frameSel  = document.getElementById('projFramework');
-    const projType  = document.getElementById('projType').value;
+    const role = document.getElementById('projRole').value;
+    const techRow = document.getElementById('techRow');
+    const langSel = document.getElementById('projLang');
+    const frameSel = document.getElementById('projFramework');
+    const projType = document.getElementById('projType').value;
 
-    langSel.innerHTML  = '<option value="">— Select language —</option>';
+    langSel.innerHTML = '<option value="">— Select language —</option>';
     frameSel.innerHTML = '<option value="">— Select framework —</option>';
 
     if (!role) { techRow.style.display = 'none'; return; }
@@ -435,8 +402,8 @@
   }
 
   function updateFrameworks() {
-    const role     = document.getElementById('projRole').value;
-    const lang     = document.getElementById('projLang').value;
+    const role = document.getElementById('projRole').value;
+    const lang = document.getElementById('projLang').value;
     const frameSel = document.getElementById('projFramework');
     const projType = document.getElementById('projType').value;
 
