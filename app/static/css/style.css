@@ -440,6 +440,60 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6); curs
 .text-muted{ color: var(--text-2); }
 .text-center{ text-align: center; }
 
+/* ─── Stats Row ──────────────────────────────────────────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+@media (max-width: 680px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  animation: slideUp .3s ease-out both;
+  transition: var(--transition);
+}
+.stat-card:hover { transform: translateY(-2px); border-color: var(--border-2); }
+.stat-icon {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text-1); line-height: 1; }
+.stat-label { font-size: .75rem; color: var(--text-2); margin-top: .2rem; }
+
+/* ─── Charts Row ─────────────────────────────────────────────── */
+.charts-row {
+  display: flex;
+  gap: 1rem;
+}
+@media (max-width: 680px) { .charts-row { flex-direction: column; } }
+
+.chart-card {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  animation: slideUp .4s ease-out both;
+}
+.chart-label {
+  font-size: .8125rem;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 1rem;
+}
+
 /* ─── Segmented Status Control ───────────────────────────────── */
 .status-seg {
   display: inline-flex;
@@ -464,9 +518,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6); curs
 }
 .seg-btn:last-child { border-right: none; }
 .seg-btn:hover { background: var(--surface-2); color: var(--text-1); }
-
-/* Active states per status */
-.seg-btn.seg-pending.active    { background: rgba(227,179,65,.15); color: var(--yellow);  }
-.seg-btn.seg-inprogress.active { background: var(--accent-dim);    color: var(--accent);  }
-.seg-btn.seg-done.active       { background: var(--green-dim);     color: var(--green);   }
+.seg-btn.seg-pending.active    { background: rgba(227,179,65,.15); color: var(--yellow); }
+.seg-btn.seg-inprogress.active { background: var(--accent-dim);    color: var(--accent); }
+.seg-btn.seg-done.active       { background: var(--green-dim);     color: var(--green);  }
 

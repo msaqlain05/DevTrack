@@ -1,99 +1,134 @@
 # 🚀 DevTrack
 
-**DevTrack** is a clean, minimal, and highly scalable Project & Task Management system designed for developers. It combines a robust Python backend built on **FastAPI** with a lightning-fast frontend rendered via **Jinja2**, Vanilla JavaScript, and native CSS Custom Properties.
+**DevTrack** is a production-ready, full-stack Project & Task Management system built for developers. It is powered by a modular **FastAPI** backend with JWT authentication and strict ownership security, paired with a premium dark-mode frontend built using **Jinja2 templates**, Vanilla JS, and native CSS.
 
 ---
 
 ## ✨ Features
 
-- **Robust Authentication**: Fully integrated OAuth2-compatible JWT (JSON Web Token) authentication flow, heavily secured using `bcrypt` password hashing.
-- **Strict Data Isolation**: Every resource (Projects, Tasks) is strictly cryptographically bounded to the `owner_id`. A user can *only* interact with their own generated data.
-- **Relational Integrity**: Deletion of a Project utilizes SQLite `PRAGMA foreign_keys=ON` event listeners to cleanly cascade and delete all associated child Tasks automatically.
-- **Dashboard Aggregation**: A top-level dashboard that dynamically fetches all active projects and aggregates "Today's Tasks" globally utilizing a fast `?date=` query parameter.
-- **Premium UI/UX**: Dark-mode natively built with pure CSS. No bulky UI frameworks—just sleek layout engines, Google `Inter` font, Animated Toast notifications, and graceful Loading states.
+| Feature | Details |
+|---|---|
+| 🔐 JWT Auth | Signup, Login, token expiry handling, auto-redirect |
+| 🔒 Ownership | Every resource is strictly scoped to the authenticated user |
+| 📁 Projects | Full CRUD — create, view, update, delete projects |
+| ✅ Tasks | Full CRUD per project — title, description, date, status |
+| 🔄 Status Control | Segmented ⏳ Pending / 🔄 Active / ✅ Done per task |
+| 📅 Date Filter | Filter tasks by date on the project page |
+| 🗑 Cascade Delete | Deleting a project removes all its tasks (SQLite PRAGMA) |
+| 💬 Toast Alerts | Animated success/error flash notifications |
+| 💀 Skeleton Loaders | Shimmer animation while data fetches |
+| 🛡 XSS Protection | All user content safely HTML-escaped before rendering |
 
 ---
 
-## 🏗️ Technical Stack
+## 🏗️ Tech Stack
 
-### Backend
-- **Framework**: [FastAPI](https://fastapi.tiangolo.com/) (High-performance Async API)
-- **Database**: SQLite (Perfect for portability, easily upgradeable to PostgreSQL)
-- **ORM**: SQLAlchemy 2.0 (Declarative mapping and session management)
-- **Validation**: Pydantic V2 (Strict request schema type-checking)
-- **Security**: `python-jose` (JWT), `passlib` / `bcrypt` (Hashing)
+**Backend**: FastAPI · SQLAlchemy 2.0 · SQLite · Pydantic V2 · python-jose (JWT) · bcrypt
 
-### Frontend
-- **Templating**: Jinja2 (Served directly by Starlette)
-- **Styling**: Vanilla CSS (CSS Variables, Flexbox/Grid)
-- **Interactivity**: Vanilla JavaScript (ES6 Fetch API `apiFetch` wrapper intercepting JWTs via localStorage)
+**Frontend**: Jinja2 · Vanilla CSS (CSS Custom Properties) · Vanilla JS (ES6 Fetch API)
 
 ---
 
-## 📂 Project Architecture
+## 📂 Project Structure
 
-The application strictly follows a **Domain-Driven Design (DDD)** Pattern to eliminate circular imports and maximize maintainability.
-
-```text
-app/
- ├── core/              # Global Configurations (Settings, JWT keys, Dependency inj.)
- ├── db/                # DB Session setup, Schema generation, Engine events
- ├── models/            # SQLAlchemy native database entities
- ├── schemas/           # Pydantic validation (Inbound payloads & Outbound serializers)
- ├── services/          # Business Logic (Keeps routers extremely thin)
- ├── routes/            # FASTApi end-routes (Controllers mapping to services)
- ├── static/            # Native CSS and Javascript files
- └── templates/         # Jinja2 HTML layout components
+```
+DevTrack/
+├── app/
+│   ├── main.py                # FastAPI app factory + router registration
+│   ├── core/
+│   │   ├── authorization.py   # verify_resource_owner() utility
+│   │   ├── config.py          # Pydantic settings (.env)
+│   │   └── security.py        # JWT create/decode, bcrypt hash/verify
+│   ├── db/
+│   │   ├── base.py            # SQLAlchemy Base
+│   │   ├── init_db.py         # create_all() on startup
+│   │   ├── mixins.py          # OwnerMixin
+│   │   └── session.py         # get_db() + SQLite PRAGMA FK enforcement
+│   ├── models/
+│   │   ├── project.py         # Project ORM model
+│   │   ├── task.py            # Task ORM model (status Enum)
+│   │   └── user.py            # User ORM model
+│   ├── schemas/
+│   │   ├── auth.py            # SignupRequest, TokenResponse, UserOut
+│   │   ├── project.py         # ProjectCreate, ProjectUpdate, ProjectOut
+│   │   └── task.py            # TaskCreate, TaskUpdate, TaskOut
+│   ├── services/
+│   │   ├── project_service.py # Project business logic
+│   │   └── task_service.py    # Task business logic + date filtering
+│   ├── routes/
+│   │   ├── auth.py            # POST /auth/signup, /auth/login, /auth/me
+│   │   ├── home.py            # Jinja2 page routes (/, /login, /dashboard…)
+│   │   ├── project.py         # Project CRUD endpoints
+│   │   └── task.py            # Task CRUD + GET /tasks/ (global)
+│   ├── static/
+│   │   ├── css/style.css      # Premium dark-mode CSS design system
+│   │   └── js/app.js          # apiFetch wrapper, toasts, skeleton helpers
+│   └── templates/
+│       ├── base.html          # Master Jinja2 layout (navbar, toast container)
+│       ├── auth.html          # Login & Signup toggle view
+│       ├── dashboard.html     # Projects + all tasks overview
+│       └── project.html       # Task management per project
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
-## ⚙️ Local Development Setup
+## ⚙️ Setup & Run
 
-### 1. Prerequisites
-Ensure you have **Python 3.10+** installed on your system.
-
-### 2. Environment Activation
-It is highly recommended to run this inside a virtual environment.
 ```bash
+# 1. Create and activate virtual environment
 python -m venv venv
+source venv/bin/activate        # Bash/Zsh
+source venv/bin/activate.fish   # Fish shell
 
-# For Linux / Mac (fish shell):
-source venv/bin/activate.fish
-
-# For Bash / Zsh:
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
-```bash
+# 2. Install dependencies
 pip install -r requirements.txt
-```
 
-### 4. Run the Dev Server
-Start the Uvicorn ASGI server with live-reloading enabled:
-```bash
+# 3. Configure environment variables
+# Copy .env.example to .env and set your SECRET_KEY etc.
+
+# 4. Start the dev server
 uvicorn app.main:app --reload
 ```
-*Note: SQLite database (`app/db/devtrack.db`) is automatically generated upon the first boot via SQLAlchemy's `create_all()` hook.*
+
+> The SQLite database (`app/db/devtrack.db`) is **auto-created** on first boot. If you change models, delete the `.db` file to regenerate.
+
+App runs at: **http://127.0.0.1:8000**
+API Docs at: **http://127.0.0.1:8000/docs**
 
 ---
 
-## 🚦 Usage & Testing
+## 🔑 Environment Variables (`.env`)
 
-1. **Access the App:** Open your browser and navigate to `http://127.0.0.1:8000`.
-2. **Access Swagger Docs:** FastAPI automatically constructs beautiful API swagger documentation. Navigate to `http://127.0.0.1:8000/docs` to test endpoints manually!
-3. **App Flow**:
-   - Create a new account.
-   - Navigate to the Dashboard.
-   - Spin up a new Project.
-   - Navigate into the Project and create a few Tasks assigned to specific dates.
-   - Mark tasks as `Completed` directly from the Dashboard view!
+| Variable | Description |
+|---|---|
+| `SECRET_KEY` | General app secret |
+| `JWT_SECRET_KEY` | Secret for signing JWT tokens |
+| `JWT_ALGORITHM` | e.g. `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token lifetime (e.g. `60`) |
+| `DATABASE_URL` | e.g. `sqlite:///./app/db/devtrack.db` |
 
 ---
 
-## 🔮 Future Roadmap
+## 🧪 Testing Checklist
 
-- Migrating the database connector to `asyncpg` (PostgreSQL) for large-scale production deployments.
-- Integrating `Alembic` for automated database schema migrations.
-- Adding a collaborative "Team" feature letting users share active Projects via bridging tables.
+- [ ] Navigate to `/` → redirects to `/dashboard` → redirects to `/login` (unauthenticated)
+- [ ] Create a new account via Sign Up
+- [ ] Login and land on the Dashboard
+- [ ] Create a Project and navigate into it
+- [ ] Add tasks with different statuses and dates
+- [ ] Toggle task status using the ⏳ / 🔄 / ✅ segmented control
+- [ ] Filter tasks by date using the date picker (with Clear button)
+- [ ] Mark a task "Done" directly from the Dashboard
+- [ ] Confirm toast notifications appear for every action
+- [ ] Try accessing another user's project URL → should return 403
+
+---
+
+## 🔮 Roadmap
+
+- **Alembic** migrations for safe schema evolution
+- **PostgreSQL** support for production deployments
+- **Team collaboration** — share projects with other users
+- **Pagination** for large task lists
