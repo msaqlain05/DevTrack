@@ -341,7 +341,112 @@
       showToast('Project created! 🚀', 'success');
       loadDashboard();
     } catch (err) { showToast(err.message, 'error'); }
-    finally { btn.disabled = false; btn.textContent = 'Create'; }
+    finally { btn.disabled = false; btn.textContent = 'Create project'; }
+  }
+
+  // ── Tech stack logic ────────────────────────────────────────────
+  const TECH_MAP = {
+    frontend: {
+      'JavaScript':    ['React','Vue.js','Angular','Svelte','Solid.js','Astro','Preact','Alpine.js','Backbone.js'],
+      'TypeScript':    ['React','Vue.js','Angular','Svelte','Next.js','Nuxt.js','Remix','Qwik'],
+      'CSS / HTML':    ['Tailwind CSS','Bootstrap','Bulma','Foundation','Materialize','Pico CSS'],
+      'Dart':          ['Flutter Web'],
+      'Elm':           ['Elm (No framework)'],
+      'ClojureScript': ['Re-frame','Reagent'],
+    },
+    backend: {
+      'Python':        ['FastAPI','Django','Flask','Tornado','Litestar','Falcon','Bottle','Quart'],
+      'JavaScript':    ['Express','NestJS','Fastify','Hapi.js','Koa','AdonisJS','Feathers.js'],
+      'TypeScript':    ['NestJS','Express','Fastify','AdonisJS','Hono'],
+      'Go':            ['Gin','Fiber','Echo','Chi','Gorilla Mux','Beego','Buffalo','Revel'],
+      'Java':          ['Spring Boot','Quarkus','Micronaut','Jakarta EE','Dropwizard','Vert.x','Helidon'],
+      'Kotlin':        ['Spring Boot','Ktor','Micronaut','Vert.x'],
+      'C#':            ['ASP.NET Core','Minimal APIs','Carter','FastEndpoints'],
+      'PHP':           ['Laravel','Symfony','CodeIgniter','CakePHP','Slim','Laminas','Phalcon','Yii'],
+      'Ruby':          ['Rails','Sinatra','Hanami','Padrino','Grape'],
+      'Rust':          ['Actix-web','Axum','Rocket','Warp','Salvo','Poem'],
+      'Elixir':        ['Phoenix','Plug','Bandit'],
+      'Scala':         ['Play Framework','Akka HTTP','http4s','Tapir'],
+      'Haskell':       ['Servant','Yesod','Scotty','Snap'],
+      'Clojure':       ['Luminus','Compojure','Reitit','Pedestal'],
+      'Dart':          ['Shelf','Dart Frog'],
+      'Swift':         ['Vapor','Hummingbird'],
+      'Perl':          ['Dancer2','Mojolicious','Catalyst'],
+      'Lua':           ['OpenResty / NGINX','Lapis'],
+      'OCaml':         ['Dream','Cohttp'],
+      'F#':            ['Giraffe','Falco','ASP.NET Core (F#)'],
+      'Nim':           ['Mummy','Prologue','Jester'],
+      'Zig':           ['Zap','http.zig'],
+      'Julia':         ['Genie.jl','HTTP.jl'],
+      'R':             ['Plumber','RestRserve'],
+      'C / C++':       ['Drogon','CppCMS','Crow','uWebSockets','Pistache'],
+    },
+    fullstack: {
+      'JavaScript':    ['Next.js','Nuxt.js','Remix','SvelteKit','Astro','Redwood.js','Blitz.js'],
+      'TypeScript':    ['Next.js','Nuxt.js','Remix','SvelteKit','Analog','Qwik City'],
+      'Python':        ['Django (Full Stack)','Flask + HTMX','FastAPI + Jinja2','Litestar + HTMX'],
+      'PHP':           ['Laravel (Full Stack)','Symfony (Full Stack)','WordPress','Drupal'],
+      'Ruby':          ['Rails (Full Stack)','Hotwire + Rails'],
+      'Elixir':        ['Phoenix LiveView'],
+      'Kotlin':        ['Ktor Full Stack','Kotlin + HTMX'],
+      'Java':          ['Spring Boot (Full Stack)','Vaadin','JHipster'],
+      'C#':            ['Blazor','ASP.NET Core MVC','Razor Pages'],
+      'Clojure':       ['Luminus Full Stack','Fulcro'],
+      'Scala':         ['Play Framework (Full)'],
+      'Go':            ['Go + Templ','Go + HTMX'],
+    },
+  };
+
+  const MOBILE_LANGS = {
+    'Dart':            ['Flutter'],
+    'Swift':           ['SwiftUI','UIKit','SwiftData','Combine'],
+    'Kotlin':          ['Jetpack Compose','Android SDK','Compose Multiplatform'],
+    'Java':            ['Android SDK (Java)','Spring Android'],
+    'JavaScript':      ['React Native','Expo','Ionic','NativeScript','Capacitor'],
+    'TypeScript':      ['React Native','Expo','Ionic','NativeScript'],
+    'C#':              ['MAUI (.NET)','Xamarin','Uno Platform'],
+    'C++':             ['Qt for Mobile','Cocos2d-x'],
+    'Python':          ['Kivy','BeeWare (Briefcase)'],
+    'Rust':            ['Tauri Mobile','Dioxus Native'],
+    'Go':              ['Fyne (Mobile)'],
+    'Ruby':            ['RubyMotion'],
+  };
+
+
+  function updateTechOptions() {
+    const role      = document.getElementById('projRole').value;
+    const techRow   = document.getElementById('techRow');
+    const langSel   = document.getElementById('projLang');
+    const frameSel  = document.getElementById('projFramework');
+    const projType  = document.getElementById('projType').value;
+
+    langSel.innerHTML  = '<option value="">— Select language —</option>';
+    frameSel.innerHTML = '<option value="">— Select framework —</option>';
+
+    if (!role) { techRow.style.display = 'none'; return; }
+    techRow.style.display = '';
+
+    // Choose correct language map
+    const isMobile = projType === 'mobile-app';
+    const map = isMobile ? MOBILE_LANGS : (TECH_MAP[role] || {});
+    Object.keys(map).forEach(lang => {
+      langSel.innerHTML += `<option value="${lang}">${lang}</option>`;
+    });
+  }
+
+  function updateFrameworks() {
+    const role     = document.getElementById('projRole').value;
+    const lang     = document.getElementById('projLang').value;
+    const frameSel = document.getElementById('projFramework');
+    const projType = document.getElementById('projType').value;
+
+    frameSel.innerHTML = '<option value="">— Select framework —</option>';
+    const isMobile = projType === 'mobile-app';
+    const map = isMobile ? MOBILE_LANGS : (TECH_MAP[role] || {});
+    const frameworks = map[lang] || [];
+    frameworks.forEach(fw => {
+      frameSel.innerHTML += `<option value="${fw}">${fw}</option>`;
+    });
   }
 
   document.addEventListener('DOMContentLoaded', loadDashboard);

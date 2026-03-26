@@ -522,3 +522,18 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6); curs
 .seg-btn.seg-inprogress.active { background: var(--accent-dim);    color: var(--accent); }
 .seg-btn.seg-done.active       { background: var(--green-dim);     color: var(--green);  }
 
+/* ─── Meta Pills (project cards) ─────────────────────────────── */
+.meta-pills { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .5rem; }
+.meta-pill {
+  display: inline-flex; align-items: center;
+  padding: .15rem .55rem;
+  font-size: .7rem; font-weight: 500;
+  border-radius: 2rem;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-2);
+}
+.lang-pill  { background: rgba(88,166,255,.1);  border-color: rgba(88,166,255,.3);  color: var(--accent); }
+.frame-pill { background: rgba(188,140,255,.08); border-color: rgba(188,140,255,.3); color: var(--purple); }
+.task-pill  { background: var(--surface-2);      border-color: var(--border);        color: var(--text-3); }
+
+

@@ -73,12 +73,26 @@
       titleEl.textContent = p.name;
       titleEl.classList.remove('skeleton');
       titleEl.style = '';
-      document.getElementById('projDesc').textContent = p.description || '';
+
+      const TYPE_ICONS  = { 'web-app':'🌐','website':'📄','mobile-app':'📱','desktop-app':'🖥','api':'🔌','cli':'⌨️','library':'📦','other':'🔧' };
+      const ROLE_LABELS = { 'fullstack':'⚡ Full Stack','frontend':'🎨 Frontend','backend':'⚙️ Backend' };
+
+      const pills = [
+        p.project_type ? `<span class="meta-pill">${TYPE_ICONS[p.project_type] || ''} ${p.project_type.replace('-',' ')}</span>` : '',
+        p.role         ? `<span class="meta-pill">${ROLE_LABELS[p.role] || p.role}</span>` : '',
+        p.language     ? `<span class="meta-pill lang-pill">${p.language}</span>` : '',
+        p.framework    ? `<span class="meta-pill frame-pill">${p.framework}</span>` : '',
+      ].filter(Boolean).join('');
+
+      document.getElementById('projDesc').innerHTML = `
+        ${p.description ? `<span style="color:var(--text-2);font-size:.875rem;">${escHtml(p.description)}</span>` : ''}
+        ${pills ? `<div class="meta-pills" style="margin-top:.5rem;">${pills}</div>` : ''}`;
       document.getElementById('deleteProjBtn').style.display = '';
     } catch {
       document.getElementById('projTitle').textContent = 'Project not found';
     }
   }
+
 
   // ── Load Tasks ──────────────────────────────────────────────────
   async function loadTasks() {
