@@ -2,6 +2,13 @@ import os
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+_INSECURE_DEFAULTS = frozenset(
+    {
+        "change-me-in-production",
+        "change-jwt-secret-in-production",
+    }
+)
+
 
 class Settings(BaseSettings):
     # Application
@@ -17,10 +24,10 @@ class Settings(BaseSettings):
     SUPABASE_URL: str | None = None
     SUPABASE_KEY: str | None = None
 
-    # Security
+    # Security (use long random strings in production; min 32 chars on Vercel)
     SECRET_KEY: str = "change-me-in-production"
 
-    # JWT
+    # JWT (if left at default, reuses SECRET_KEY after _sync_auth_secrets)
     JWT_SECRET_KEY: str = "change-jwt-secret-in-production"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
@@ -32,6 +39,23 @@ class Settings(BaseSettings):
     )
 
 
+def _is_strong_secret(value: str) -> bool:
+    return value not in _INSECURE_DEFAULTS and len(value) >= 32
+
+
+def _sync_auth_secrets(s: Settings) -> None:
+    """
+    On Vercel, set one strong variable (SECRET_KEY or JWT_SECRET_KEY) and the
+    other can stay unset — mirror the strong value so JWT and sessions match.
+    """
+    sec_strong = _is_strong_secret(s.SECRET_KEY)
+    jwt_strong = _is_strong_secret(s.JWT_SECRET_KEY)
+    if sec_strong and not jwt_strong:
+        s.JWT_SECRET_KEY = s.SECRET_KEY
+    elif jwt_strong and not sec_strong:
+        s.SECRET_KEY = s.JWT_SECRET_KEY
+
+
 settings = Settings()
 
 # Ensure SQLAlchemy uses psycopg dialect when a generic postgres URL is supplied.
@@ -39,6 +63,8 @@ if settings.DATABASE_URL.startswith("postgresql://"):
     settings.DATABASE_URL = settings.DATABASE_URL.replace(
         "postgresql://", "postgresql+psycopg://", 1
     )
+
+_sync_auth_secrets(settings)
 
 _PLACEHOLDERS = {
     "YOUR_DB_PASSWORD",
@@ -57,17 +83,12 @@ if any(token in settings.DATABASE_URL for token in _PLACEHOLDERS):
         f"Transaction Pooler URL (user, password, host) in {_where}"
     )
 
-_INSECURE_DEFAULTS = {
-    "change-me-in-production",
-    "change-jwt-secret-in-production",
-}
-
 if os.getenv("VERCEL"):
-    if settings.SECRET_KEY in _INSECURE_DEFAULTS or len(settings.SECRET_KEY) < 32:
+    if not _is_strong_secret(settings.SECRET_KEY) or not _is_strong_secret(
+        settings.JWT_SECRET_KEY
+    ):
         raise RuntimeError(
-            "Insecure SECRET_KEY. Set a strong SECRET_KEY in Vercel environment variables."
-        )
-    if settings.JWT_SECRET_KEY in _INSECURE_DEFAULTS or len(settings.JWT_SECRET_KEY) < 32:
-        raise RuntimeError(
-            "Insecure JWT_SECRET_KEY. Set a strong JWT_SECRET_KEY in Vercel environment variables."
+            "Set at least one strong secret (≥32 characters, not the dev defaults) in "
+            "Vercel → Settings → Environment Variables: use SECRET_KEY, or JWT_SECRET_KEY, "
+            "or both. If you set only one, the other is derived automatically."
         )
