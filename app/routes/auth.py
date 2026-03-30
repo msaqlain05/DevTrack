@@ -22,7 +22,7 @@ def _is_unique_constraint_violation(exc: IntegrityError) -> bool:
     orig = getattr(exc, "orig", None)
     if orig is None:
         return False
-    code = getattr(orig, "pgcode", None)
+    code = getattr(orig, "pgcode", None) or getattr(orig, "sqlstate", None)
     if code == "23505":  # PostgreSQL unique_violation
         return True
     text = str(orig).lower()

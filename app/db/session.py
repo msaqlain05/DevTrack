@@ -14,7 +14,7 @@ def _create_engine():
     Supabase transaction pooler (PgBouncer) is incompatible with prepared statements
     in transaction mode — psycopg3 must use ``prepare_threshold=None``.
     """
-    kwargs: dict = {"echo": settings.DEBUG}
+    kwargs: dict = {"echo": settings.SQL_ECHO}
     connect_args: dict = {}
 
     if settings.DATABASE_URL.startswith("postgresql"):

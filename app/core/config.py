@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "DevTrack"
     APP_VERSION: str = "0.1.0"
     DEBUG: bool = False
+    SQL_ECHO: bool = False
 
     # Database
     DATABASE_URL: str = (

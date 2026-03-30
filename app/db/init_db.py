@@ -1,3 +1,5 @@
+import logging
+
 from sqlalchemy import inspect, text
 
 from app.db.base import Base
@@ -7,6 +9,8 @@ from app.db.session import engine
 from app.models.user import User  # noqa: F401
 from app.models.task import Task  # noqa: F401
 from app.models.project import Project  # noqa: F401
+
+_logger = logging.getLogger(__name__)
 
 
 def _users_table_kwargs(engine) -> dict:
@@ -36,6 +40,14 @@ def _ensure_users_columns_match_model(engine) -> None:
                     "hashed_password VARCHAR(255)"
                 )
             )
+        if "name" in cols:
+            # Some Supabase user table variants require a non-null "name" value.
+            # Ensure inserts that omit "name" still succeed.
+            conn.execute(
+                text(
+                    "ALTER TABLE public.users ALTER COLUMN name SET DEFAULT ''"
+                )
+            )
         conn.execute(
             text(
                 "UPDATE public.users SET hashed_password = '' "
@@ -58,7 +70,9 @@ def _ensure_users_columns_match_model(engine) -> None:
 
 def init_db() -> None:
     """Create all database tables defined via ORM models."""
+    _logger.info("Connecting to database...")
     Base.metadata.create_all(bind=engine)
     if engine.dialect.name == "postgresql":
         _ensure_users_columns_match_model(engine)
+    _logger.info("Database ready.")
 
