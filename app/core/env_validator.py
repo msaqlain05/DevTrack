@@ -36,6 +36,21 @@ def sync_auth_secrets(secret_key: str, jwt_secret_key: str) -> tuple[str, str]:
     return secret_key, jwt_secret_key
 
 
+def _describe_secret_env(name: str) -> str:
+    """Privacy-safe hint: unset vs empty vs too short vs default placeholder."""
+    raw = os.environ.get(name)
+    if raw is None:
+        return f"{name}: not present in process environment (Vercel did not inject it for this deployment)."
+    stripped = raw.strip()
+    if not stripped:
+        return f"{name}: set but empty."
+    if stripped in INSECURE_DEFAULTS:
+        return f"{name}: still the dev placeholder — replace with a random value (>=32 chars)."
+    if len(stripped) < 32:
+        return f"{name}: length is {len(stripped)} — must be >= 32 characters."
+    return f"{name}: OK (length {len(stripped)})."
+
+
 def validate_env(
     *,
     database_url: str,
@@ -61,8 +76,15 @@ def validate_env(
 
     if vercel and (not is_strong_secret(secret_key) or not is_strong_secret(jwt_secret_key)):
         errors.append(
-            "SECRET_KEY/JWT_SECRET_KEY must be strong in Vercel "
-            "(>=32 chars and not default values)."
+            "After loading env, SECRET_KEY and JWT_SECRET_KEY must both be strong "
+            "(>=32 chars, not dev defaults). Set at least one of SECRET_KEY or "
+            "JWT_SECRET_KEY in Vercel; the other is copied automatically."
+        )
+        errors.append(_describe_secret_env("SECRET_KEY"))
+        errors.append(_describe_secret_env("JWT_SECRET_KEY"))
+        errors.append(
+            "In Vercel, open Environment Variables and enable the key for the "
+            "environment you deploy to (Production vs Preview). Redeploy after saving."
         )
 
     if supabase_url and not supabase_url.startswith(("https://", "http://")):
