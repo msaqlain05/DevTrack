@@ -6,6 +6,12 @@ from jose import JWTError, jwt
 
 from app.core.config import settings
 
+
+def normalize_email(email: str) -> str:
+    """Canonical form for storage, lookups, and JWT ``sub`` (strip + lowercase)."""
+    return email.strip().lower()
+
+
 # ── Password hashing ─────────────────────────────────────────────────────────
 
 def hash_password(plain: str) -> str:

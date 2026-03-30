@@ -92,7 +92,7 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-> The SQLite database (`app/db/devtrack.db`) is **auto-created** on first boot. If you change models, delete the `.db` file to regenerate.
+> Configure `DATABASE_URL` with your Supabase Transaction Pooler connection string before first run.
 
 App runs at: **http://127.0.0.1:8000**
 API Docs at: **http://127.0.0.1:8000/docs**
@@ -107,7 +107,7 @@ API Docs at: **http://127.0.0.1:8000/docs**
 | `JWT_SECRET_KEY` | Secret for signing JWT tokens |
 | `JWT_ALGORITHM` | e.g. `HS256` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token lifetime (e.g. `60`) |
-| `DATABASE_URL` | e.g. `sqlite:///./app/db/devtrack.db` |
+| `DATABASE_URL` | e.g. `postgresql+psycopg://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres?sslmode=require` |
 
 ---
 

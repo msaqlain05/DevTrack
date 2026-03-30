@@ -10,7 +10,12 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # Database
-    DATABASE_URL: str = "sqlite:///./app/db/devtrack.db"
+    DATABASE_URL: str = (
+        "postgresql+psycopg://postgres.YOUR_PROJECT_REF:YOUR_DB_PASSWORD@"
+        "aws-0-ap-south-1.pooler.supabase.com:6543/postgres?sslmode=require"
+    )
+    SUPABASE_URL: str | None = None
+    SUPABASE_KEY: str | None = None
 
     # Security
     SECRET_KEY: str = "change-me-in-production"
@@ -29,9 +34,23 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Vercel serverless functions have a read-only filesystem except /tmp.
-if os.getenv("VERCEL") and settings.DATABASE_URL == "sqlite:///./app/db/devtrack.db":
-    settings.DATABASE_URL = "sqlite:////tmp/devtrack.db"
+# Ensure SQLAlchemy uses psycopg dialect when a generic postgres URL is supplied.
+if settings.DATABASE_URL.startswith("postgresql://"):
+    settings.DATABASE_URL = settings.DATABASE_URL.replace(
+        "postgresql://", "postgresql+psycopg://", 1
+    )
+
+_PLACEHOLDERS = {
+    "YOUR_DB_PASSWORD",
+    "YOUR_SUPABASE_PUBLISHABLE_KEY",
+    "YOUR_PROJECT_REF",
+}
+
+if any(token in settings.DATABASE_URL for token in _PLACEHOLDERS):
+    raise RuntimeError(
+        "DATABASE_URL still contains placeholder values. Set your real Supabase "
+        "Transaction Pooler username/password in .env."
+    )
 
 _INSECURE_DEFAULTS = {
     "change-me-in-production",

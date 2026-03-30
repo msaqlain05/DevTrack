@@ -1,13 +1,32 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import create_access_token, hash_password, normalize_email, verify_password
 from app.db.session import get_db
+from app.dependencies import get_current_user
 from app.models.user import User
-from app.schemas.auth import SignupRequest, TokenResponse, UserOut
+from app.schemas.auth import LoginRequest, SignupRequest, TokenResponse, UserOut
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+
+
+def _user_by_email(db: Session, email: str) -> User | None:
+    """Case-insensitive lookup (handles legacy rows and normalized JWT sub)."""
+    key = normalize_email(email)
+    return db.query(User).filter(func.lower(User.email) == key).first()
+
+
+def _is_unique_constraint_violation(exc: IntegrityError) -> bool:
+    orig = getattr(exc, "orig", None)
+    if orig is None:
+        return False
+    code = getattr(orig, "pgcode", None)
+    if code == "23505":  # PostgreSQL unique_violation
+        return True
+    text = str(orig).lower()
+    return "unique constraint failed" in text  # SQLite
 
 
 # ── POST /auth/signup ─────────────────────────────────────────────────────────
@@ -23,12 +42,11 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)) -> User:
     Create a new user account.
 
     - Returns the created user (without password).
-    - Raises **400** if the email is already registered.
+    - Raises **409** if the email is already registered.
     """
-    existing = db.query(User).filter(User.email == payload.email).first()
-    if existing:
+    if _user_by_email(db, payload.email):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail="Email already registered",
         )
 
@@ -39,36 +57,35 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)) -> User:
     db.add(user)
     try:
         db.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         db.rollback()
+        if _is_unique_constraint_violation(e):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email already registered",
+            ) from None
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered",
-        ) from None
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not create account.",
+        ) from e
     db.refresh(user)
     return user
 
 
 # ── POST /auth/login ──────────────────────────────────────────────────────────
 
-from fastapi.security import OAuth2PasswordRequestForm
-
 @router.post(
     "/login",
     response_model=TokenResponse,
     summary="Login and receive a JWT access token",
 )
-def login(
-    payload: OAuth2PasswordRequestForm = Depends(), 
-    db: Session = Depends(get_db)
-) -> TokenResponse:
+def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
     """
     Authenticate a user and return a JWT bearer token.
 
-    - Raised **401** if credentials are invalid.
+    - Raises **401** if credentials are invalid.
     """
-    # OAuth2PasswordRequestForm inherently uses the 'username' field, which maps to our email
-    user = db.query(User).filter(User.email == payload.username).first()
+    user = _user_by_email(db, payload.email)
 
     if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(
@@ -77,15 +94,11 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token = create_access_token(data={"sub": user.email})
+    access_token = create_access_token(data={"sub": normalize_email(user.email)})
     return TokenResponse(access_token=access_token)
 
 
 # ── GET /auth/me ──────────────────────────────────────────────────────────────
-# Example of a protected route using get_current_user
-
-from app.dependencies import get_current_user  # noqa: E402 — avoids circular import
-
 
 @router.get(
     "/me",
