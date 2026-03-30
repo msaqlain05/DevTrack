@@ -47,9 +47,14 @@ _PLACEHOLDERS = {
 }
 
 if any(token in settings.DATABASE_URL for token in _PLACEHOLDERS):
+    _where = (
+        "Vercel → Project → Settings → Environment Variables (Production & Preview)."
+        if os.getenv("VERCEL")
+        else ".env (local)."
+    )
     raise RuntimeError(
-        "DATABASE_URL still contains placeholder values. Set your real Supabase "
-        "Transaction Pooler username/password in .env."
+        "DATABASE_URL still contains placeholder values. Set the Supabase "
+        f"Transaction Pooler URL (user, password, host) in {_where}"
     )
 
 _INSECURE_DEFAULTS = {

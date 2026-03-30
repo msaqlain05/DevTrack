@@ -1,8 +1,10 @@
+import logging
+from contextlib import asynccontextmanager
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from contextlib import asynccontextmanager
-from pathlib import Path
 
 from app.core.config import settings
 from app.db.init_db import init_db
@@ -15,11 +17,17 @@ APP_DIR = Path(__file__).resolve().parent
 STATIC_DIR = APP_DIR / "static"
 TEMPLATES_DIR = APP_DIR / "templates"
 
+_logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Run startup / shutdown tasks."""
-    init_db()  # Create tables on first run
+    try:
+        init_db()
+    except Exception:
+        _logger.exception("Database initialization failed (check DATABASE_URL and Supabase pooler)")
+        raise
     yield
     # Add shutdown cleanup here if needed
 
